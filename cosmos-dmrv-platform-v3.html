@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>COSMOS dMRV Platform v3.0 | GCFTportal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/shepherd.js@11.2.0/dist/css/shepherd.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://unpkg.com/shepherd.js@11.2.0/dist/js/shepherd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f8fafc;--surface:#fff;--surface2:#f1f5f9;--sidebar:#0a1f2e;--sidebar-hover:#132f42;
+  --primary:#10b981;--primary-dark:#059669;--blue:#3b82f6;--navy:#1e3a5f;--purple:#8b5cf6;
+  --text:#0f172a;--text-soft:#475569;--text-mute:#94a3b8;--border:#e2e8f0;
+  --warning:#f59e0b;--danger:#ef4444;--shadow:0 1px 3px rgba(15,23,42,.05),0 4px 12px rgba(15,23,42,.04);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+.mono{font-family:'JetBrains Mono',monospace}
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:250px;flex-shrink:0;background:var(--sidebar);color:#cbd5e1;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{padding:20px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
+.brand .mark{display:flex;align-items:center;gap:10px;color:#fff;font-weight:800;font-size:15px}
+.brand .mark .dot{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#10b981,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:13px}
+.brand .sub{font-size:9px;color:#64748b;margin-top:6px;letter-spacing:.8px;text-transform:uppercase;font-weight:600}
+.brand .powered{margin-top:10px;padding:6px 10px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:8px;font-size:9px;color:#6ee7b7;display:flex;align-items:center;gap:6px}
+
+.nav{padding:12px 10px}
+.nav-label{font-size:9px;text-transform:uppercase;letter-spacing:1.2px;color:#475569;font-weight:700;padding:12px 12px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:12.5px;font-weight:500;color:#cbd5e1;cursor:pointer;margin-bottom:2px;transition:all .15s;user-select:none}
+.nav-item:hover{background:var(--sidebar-hover);color:#fff}
+.nav-item.active{background:rgba(16,185,129,.12);color:#fff;box-shadow:inset 3px 0 0 var(--primary)}
+.nav-item i{width:16px;text-align:center;font-size:13px}
+.nav-item .badge{margin-left:auto;background:var(--primary);color:#fff;font-size:9px;padding:1px 6px;border-radius:10px;font-weight:700}
+.nav-item .badge.warn{background:var(--warning)}
+.sidebar-footer{padding:14px 18px;border-top:1px solid rgba(255,255,255,.06);font-size:10px;color:#64748b}
+.sidebar-footer .live{display:flex;align-items:center;gap:8px;margin-bottom:6px;color:#6ee7b7;font-weight:600}
+.pulse{width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 0 0 rgba(16,185,129,.7);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.7)}70%{box-shadow:0 0 0 8px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+
+/* MAIN */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.topbar h1{font-size:18px;font-weight:700}
+.topbar .crumb{font-size:11px;color:var(--text-mute);margin-top:2px;display:flex;align-items:center;gap:6px}
+.topbar .actions{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;font-size:10.5px;font-weight:600;background:var(--surface2);color:var(--text-soft);border:1px solid var(--border)}
+.pill.ok{background:#ecfdf5;color:#047857;border-color:#a7f3d0}
+.pill.info{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
+.pill.purple{background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;font-size:11.5px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark)}
+.btn-ghost{background:var(--surface2);color:var(--text-soft);border:1px solid var(--border)}.btn-ghost:hover{background:#e2e8f0}
+.btn-navy{background:var(--navy);color:#fff}.btn-navy:hover{background:#0f2a45}
+.btn-danger{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca}.btn-danger:hover{background:#fecaca}
+.btn-warn{background:#fef3c7;color:#92400e;border:1px solid #fde68a}.btn-warn:hover{background:#fde68a}
+.btn-sm{padding:5px 10px;font-size:10.5px}
+.btn-icon{width:28px;height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.btn-print{background:#1e3a5f;color:#fff}.btn-print:hover{background:#0f2a45}
+
+.content{padding:20px 24px 60px;flex:1}
+.view{display:none}
+.view.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--blue))}
+.kpi .label{font-size:9.5px;text-transform:uppercase;letter-spacing:1px;color:var(--text-mute);font-weight:700;margin-bottom:6px}
+.kpi .val{font-size:26px;font-weight:800;letter-spacing:-1px;line-height:1.1}
+.kpi .val .unit{font-size:12px;font-weight:600;color:var(--text-soft);margin-left:4px}
+.kpi .foot{margin-top:8px;font-size:10.5px;color:var(--text-soft)}
+.kpi .foot .up{color:var(--primary);font-weight:600}
+.kpi .icon-bg{position:absolute;right:12px;top:12px;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(59,130,246,.1));color:var(--primary)}
+
+/* PANELS */
+.panel{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+.panel-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.panel-head h3{font-size:14px;font-weight:700}
+.panel-head .hint{font-size:10.5px;color:var(--text-mute);margin-left:auto}
+.panel-body{padding:18px}
+.panel-body.tight{padding:0}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:1000px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+/* TABLES */
+table.data{width:100%;border-collapse:collapse;font-size:11.5px}
+table.data thead th{text-align:left;padding:10px 12px;background:var(--surface2);color:var(--text-soft);font-weight:700;font-size:9.5px;letter-spacing:.6px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+table.data tbody td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+table.data tbody tr:hover{background:#fafbfc}
+table.data tbody tr:last-child td{border-bottom:none}
+.sensor-id{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;color:var(--navy)}
+.sensor-val{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:11.5px}
+.status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px;background:var(--primary);box-shadow:0 0 0 3px rgba(16,185,129,.15)}
+.status-dot.warn{background:var(--warning);box-shadow:0 0 0 3px rgba(245,158,11,.15)}
+.status-dot.bad{background:var(--danger);box-shadow:0 0 0 3px rgba(239,68,68,.15)}
+.status-dot.off{background:var(--text-mute);box-shadow:0 0 0 3px rgba(148,163,184,.15)}
+
+/* LIVE BAR */
+.live-bar{background:linear-gradient(90deg,#0a1f2e,#1a3a5a);color:#fff;padding:12px 18px;border-radius:12px;margin-bottom:18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.live-bar .icon{width:34px;height:34px;border-radius:10px;background:rgba(16,185,129,.2);display:flex;align-items:center;justify-content:center;color:#10b981;font-size:15px}
+.live-bar h2{font-size:13px;font-weight:700}
+.live-bar .sub{font-size:10px;color:#94a3b8;margin-top:2px}
+.live-bar .meter{margin-left:auto;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.live-bar .meter .item{text-align:right}
+.live-bar .meter .item .num{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:#6ee7b7}
+.live-bar .meter .item .lbl{font-size:8.5px;text-transform:uppercase;letter-spacing:.8px;color:#94a3b8;margin-top:2px}
+.sim-controls{display:flex;gap:6px;align-items:center;background:rgba(255,255,255,.06);padding:5px 7px;border-radius:8px}
+.sim-controls button{background:transparent;border:none;color:#cbd5e1;width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:11px}
+.sim-controls button:hover{background:rgba(255,255,255,.1);color:#fff}
+.sim-controls button.on{background:#10b981;color:#fff}
+
+/* CALC */
+.calc-step{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--border)}
+.calc-step:last-child{border-bottom:none}
+.calc-step .lbl{color:var(--text-soft);font-size:11.5px}
+.calc-step .val{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12.5px}
+.calc-step.total{background:#ecfdf5}
+.calc-step.total .lbl{font-weight:700;color:#047857}
+.calc-step.total .val{color:#047857;font-size:15px}
+.calc-formula{background:#0f172a;color:#e2e8f0;padding:14px 18px;border-radius:10px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.8;overflow-x:auto}
+.calc-formula .cmt{color:#64748b}.calc-formula .var{color:#6ee7b7}.calc-formula .op{color:#f472b6}.calc-formula .num{color:#fbbf24}
+
+.chart-wrap{position:relative;height:240px}
+.chart-wrap.tall{height:320px}
+
+/* AUDIT */
+.audit-log{max-height:320px;overflow-y:auto;background:#0f172a;border-radius:10px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:10.5px;line-height:1.9;color:#94a3b8}
+.audit-log .ts{color:#64748b}.audit-log .ok{color:#6ee7b7}.audit-log .info{color:#93c5fd}.audit-log .warn{color:#fbbf24}.audit-log .err{color:#fca5a5}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:720px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;position:sticky;top:0;background:#fff;z-index:5}
+.modal-head h3{font-size:15px;font-weight:700}
+.modal-head .close{margin-left:auto;background:transparent;border:none;width:30px;height:30px;border-radius:8px;cursor:pointer;color:var(--text-soft);font-size:15px}
+.modal-head .close:hover{background:var(--surface2)}
+.modal-body{padding:20px}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;background:#fafbfc;position:sticky;bottom:0}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-row.full{grid-template-columns:1fr}
+.form-row label{display:block;font-size:10px;font-weight:700;color:var(--text-soft);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.form-row input,.form-row select,.form-row textarea{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:12.5px;background:#fafbfc}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(16,185,129,.1);background:#fff}
+
+/* DETAIL MODAL SPECIFIC */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.detail-card{background:var(--surface2);border-radius:10px;padding:14px}
+.detail-card .lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-mute);font-weight:700;margin-bottom:4px}
+.detail-card .val{font-size:18px;font-weight:800;color:var(--text)}
+.detail-card .val small{font-size:11px;font-weight:600;color:var(--text-soft)}
+.detail-section{margin-bottom:18px}
+.detail-section h4{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-soft);font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.detail-row{display:flex;justify-content:space-between;padding:7px 0;font-size:12px;border-bottom:1px solid var(--surface2)}
+.detail-row:last-child{border-bottom:none}
+.detail-row .k{color:var(--text-soft)}
+.detail-row .v{font-weight:600;color:var(--text)}
+
+/* MAP */
+#map{height:520px;border-radius:0;background:#e5e7eb}
+.map-legend{position:absolute;bottom:20px;right:20px;background:rgba(255,255,255,.96);padding:10px 12px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.1);font-size:10.5px;z-index:400}
+.map-legend .row{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.map-legend .dot{width:11px;height:11px;border-radius:50%}
+.map-controls{position:absolute;top:20px;right:20px;z-index:400;display:flex;flex-direction:column;gap:5px}
+.map-controls button{background:rgba(255,255,255,.96);border:1px solid var(--border);width:32px;height:32px;border-radius:8px;cursor:pointer;color:var(--text);box-shadow:0 2px 6px rgba(0,0,0,.08);font-size:12px}
+.map-controls button:hover{background:#fff;border-color:var(--primary);color:var(--primary)}
+.map-wrap{position:relative;border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+
+/* FILTER */
+.filter-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 18px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.filter-bar select,.filter-bar input{padding:6px 11px;border:1px solid var(--border);border-radius:8px;font-size:11.5px;background:#fff;font-family:inherit;min-width:150px}
+.filter-bar label{font-size:10px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.4px}
+
+/* REPORT */
+.report-preview{background:#fff;border:1px solid var(--border);border-radius:10px;padding:28px 36px;max-height:600px;overflow-y:auto;font-size:11.5px;line-height:1.7;color:#334155}
+.report-preview h1{font-size:18px;color:var(--text);margin-bottom:4px}
+.report-preview h2{font-size:12px;color:var(--text);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.6px;border-bottom:2px solid var(--primary);padding-bottom:5px}
+.report-preview .meta{display:grid;grid-template-columns:1fr 1fr;gap:5px 20px;margin:12px 0;padding:12px;background:var(--surface2);border-radius:8px;font-size:10.5px}
+.report-preview .meta span{color:var(--text-mute);font-weight:600}
+.report-preview table{width:100%;border-collapse:collapse;margin:8px 0;font-size:10.5px}
+.report-preview th,.report-preview td{padding:7px 9px;border-bottom:1px solid var(--border);text-align:left}
+.report-preview th{background:var(--surface2);font-weight:700}
+.report-preview .signature{margin-top:24px;padding-top:14px;border-top:1px dashed var(--border);font-size:10px;color:var(--text-mute)}
+
+/* FLEET */
+.fleet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.bio-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;transition:all .15s;cursor:pointer;position:relative}
+.bio-card:hover{border-color:var(--primary);box-shadow:0 4px 16px rgba(16,185,129,.12);transform:translateY(-2px)}
+.bio-card .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.bio-card .id{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--navy)}
+.bio-card .loc{font-size:13px;font-weight:600;margin-bottom:2px}
+.bio-card .sub{font-size:10.5px;color:var(--text-mute);margin-bottom:12px}
+.bio-card .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding-top:12px;border-top:1px solid var(--border)}
+.bio-card .stat-lbl{font-size:8.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-mute);font-weight:700}
+.bio-card .stat-val{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700}
+.bio-card .drill-hint{position:absolute;top:12px;right:40px;font-size:9px;color:var(--primary);font-weight:700;opacity:0;transition:opacity .15s}
+.bio-card:hover .drill-hint{opacity:1}
+
+/* FIN */
+.fin-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);align-items:center}
+.fin-row:last-child{border-bottom:none}
+.fin-row.header{background:var(--surface2);font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-soft)}
+.fin-row .src{font-weight:600;font-size:11.5px}
+.fin-row .amt{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12.5px;color:var(--primary-dark)}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9.5px;font-weight:600}
+.tag.grant{background:#ecfdf5;color:#047857}.tag.loan{background:#eff6ff;color:#1d4ed8}.tag.blend{background:#fef3c7;color:#92400e}.tag.pre{background:#f3e8ff;color:#7e22ce}
+
+/* SCORECARD */
+.scorecard{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.score-item{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center}
+.score-item .ring{width:50px;height:50px;margin:0 auto 8px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff}
+.score-item .ring.green{background:linear-gradient(135deg,#10b981,#059669)}
+.score-item .ring.blue{background:linear-gradient(135deg,#3b82f6,#2563eb)}
+.score-item .ring.amber{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.score-item .ring.navy{background:linear-gradient(135deg,#1e3a5f,#0f2a45)}
+.score-item .ring.purple{background:linear-gradient(135deg,#8b5cf6,#6d28d9)}
+.score-item .lbl{font-size:10.5px;font-weight:700}
+.score-item .sub{font-size:9.5px;color:var(--text-mute);margin-top:2px}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:11px 18px;border-radius:10px;font-size:11.5px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:9999;display:none;align-items:center;gap:9px}
+.toast.show{display:flex}
+.toast.ok{background:#065f46}.toast.warn{background:#92400e}.toast.err{background:#991b1b}
+
+/* TOOLTIP GUIDE */
+.guide-bubble{position:fixed;z-index:2000;max-width:320px;background:#0f172a;color:#fff;padding:14px 18px;border-radius:12px;font-size:12px;line-height:1.6;box-shadow:0 12px 40px rgba(0,0,0,.3);pointer-events:auto;display:none}
+.guide-bubble.show{display:block;animation:guideIn .3s ease}
+.guide-bubble::before{content:'';position:absolute;width:0;height:0;border:8px solid transparent}
+.guide-bubble.arrow-bottom::before{border-top-color:#0f172a;bottom:-16px;left:20px}
+.guide-bubble.arrow-top::before{border-bottom-color:#0f172a;top:-16px;left:20px}
+.guide-bubble .gb-title{font-weight:700;font-size:13px;margin-bottom:6px;color:#6ee7b7}
+.guide-bubble .gb-body{color:#cbd5e1;font-size:11.5px}
+.guide-bubble .gb-step{display:inline-block;background:#10b981;color:#fff;font-size:9px;font-weight:700;padding:2px 10px;border-radius:20px;margin-bottom:6px;text-transform:uppercase}
+.guide-bubble .gb-actions{margin-top:10px;display:flex;gap:8px}
+.guide-bubble .gb-btn{background:rgba(255,255,255,.1);color:#fff;border:none;padding:5px 12px;border-radius:6px;font-size:10.5px;font-weight:600;cursor:pointer;font-family:inherit}
+.guide-bubble .gb-btn:hover{background:rgba(255,255,255,.2)}
+.guide-bubble .gb-btn.primary{background:#10b981}.guide-bubble .gb-btn.primary:hover{background:#059669}
+
+/* AI NOTICE */
+.ai-notice{background:linear-gradient(135deg,#eff6ff,#f5f3ff);border:1px solid #c7d2fe;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px}
+.ai-notice .ai-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0}
+.ai-notice .ai-title{font-size:12px;font-weight:700;color:#4c1d95;margin-bottom:3px}
+.ai-notice .ai-body{font-size:11px;color:#5b21b6;line-height:1.5}
+
+/* MAINTENANCE */
+.maint-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);font-size:11.5px}
+.maint-row:last-child{border-bottom:none}
+.maint-row .m-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.maint-row .m-icon.due{background:#fef3c7;color:#92400e}
+.maint-row .m-icon.overdue{background:#fee2e2;color:#b91c1c}
+.maint-row .m-icon.done{background:#ecfdf5;color:#047857}
+
+@media(max-width:900px){
+  .sidebar{width:56px}
+  .brand .sub,.brand .powered,.nav-label,.nav-item span,.sidebar-footer{display:none}
+  .brand .mark{justify-content:center}
+  .nav-item{justify-content:center;padding:11px 0}
+  .content{padding:14px}
+  .topbar{padding:12px 14px}
+  .topbar h1{font-size:15px}
+  .form-row{grid-template-columns:1fr}
+  .fin-row{grid-template-columns:1fr;gap:4px}
+  .fin-row.header{display:none}
+  .detail-grid{grid-template-columns:1fr}
+  #map{height:380px}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark"><div class="dot"><i class="fas fa-leaf"></i></div> COSMOS dMRV</div>
+      <div class="sub">Haiti · Biogas Program</div>
+      <div class="powered"><i class="fas fa-bolt"></i> GCFTportal v3.0</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">Operations</div>
+      <div class="nav-item active" data-view="overview"><i class="fas fa-gauge-high"></i><span>Overview</span></div>
+      <div class="nav-item" data-view="live"><i class="fas fa-satellite-dish"></i><span>Live Sensors</span><span class="badge" id="navSensorCount">12</span></div>
+      <div class="nav-item" data-view="fleet"><i class="fas fa-fire-flame-simple"></i><span>Biodigester Fleet</span></div>
+      <div class="nav-label">Assets</div>
+      <div class="nav-item" data-view="sensors"><i class="fas fa-microchip"></i><span>Sensor Registry</span></div>
+      <div class="nav-item" data-view="map"><i class="fas fa-map-location-dot"></i><span>Geo Intelligence</span></div>
+      <div class="nav-item" data-view="maintenance"><i class="fas fa-wrench"></i><span>Maintenance</span><span class="badge warn" id="navMaintCount">3</span></div>
+      <div class="nav-label">Carbon</div>
+      <div class="nav-item" data-view="calc"><i class="fas fa-calculator"></i><span>Calculations</span></div>
+      <div class="nav-item" data-view="verify"><i class="fas fa-shield-halved"></i><span>Verification</span></div>
+      <div class="nav-item" data-view="analytics"><i class="fas fa-chart-pie"></i><span>Grouped Analytics</span></div>
+      <div class="nav-label">Reporting</div>
+      <div class="nav-item" data-view="reports"><i class="fas fa-file-lines"></i><span>Reports</span></div>
+      <div class="nav-item" data-view="finance"><i class="fas fa-hand-holding-dollar"></i><span>DFI Readiness</span></div>
+      <div class="nav-item" data-view="compliance"><i class="fas fa-certificate"></i><span>Standards</span></div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="live"><span class="pulse"></span> All systems online</div>
+      <div>v3.0 · GS AMM v1.1</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 id="viewTitle">Program Overview</h1>
+        <div class="crumb">
+          <i class="fas fa-location-dot"></i> Southern Haiti
+          <span style="color:#cbd5e1">·</span>
+          <span id="liveTime" class="mono">--:--:--</span>
+        </div>
+      </div>
+      <div class="actions">
+        <span class="pill ok"><i class="fas fa-circle" style="font-size:6px;"></i> Systems nominal</span>
+        <span class="pill info"><i class="fas fa-file-shield"></i> Audit-ready</span>
+        <span class="pill purple"><i class="fas fa-link"></i> Article 6.2</span>
+        <button class="btn btn-ghost" onclick="exportCSV()"><i class="fas fa-download"></i> CSV</button>
+        <button class="btn btn-print" onclick="printCurrentView()"><i class="fas fa-file-pdf"></i> PDF</button>
+        <button class="btn btn-ghost" onclick="startGuidedTour()"><i class="fas fa-graduation-cap"></i> Tour</button>
+        <button class="btn btn-primary" onclick="openSensorModal('add')"><i class="fas fa-plus"></i> Add Sensor</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <section class="view active" id="view-overview">
+        <div class="ai-notice">
+          <div class="ai-icon"><i class="fas fa-robot"></i></div>
+          <div>
+            <div class="ai-title">AI Assistant · Draft Reports Ready</div>
+            <div class="ai-body">GCF, CDB, and NDA report drafts have been auto-generated from your sensor data. Visit the <strong>Reports</strong> tab to review and edit.</div>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi" data-guide="kpi-bio"><div class="icon-bg"><i class="fas fa-fire-flame-simple"></i></div><div class="label">Active Biodigesters</div><div class="val" id="kpiBio">50<span class="unit">units</span></div><div class="foot"><span class="up"><i class="fas fa-arrow-up"></i> 12</span> added since Jan 2026</div></div>
+          <div class="kpi" data-guide="kpi-sensors"><div class="icon-bg"><i class="fas fa-microchip"></i></div><div class="label">Registered Sensors</div><div class="val" id="kpiSensors">12<span class="unit">/ 12</span></div><div class="foot"><span class="up"><i class="fas fa-check"></i> 100%</span> uptime 24h</div></div>
+          <div class="kpi" data-guide="kpi-co2"><div class="icon-bg"><i class="fas fa-cloud"></i></div><div class="label">CO₂e Verified YTD</div><div class="val" id="kpiCO2">—<span class="unit">tCO₂e</span></div><div class="foot">Methane + charcoal displacement</div></div>
+          <div class="kpi" data-guide="kpi-value"><div class="icon-bg"><i class="fas fa-coins"></i></div><div class="label">Credit Value (Base)</div><div class="val" id="kpiValue">—<span class="unit">USD</span></div><div class="foot">@ $12.00/tCO₂e forward</div></div>
+        </div>
+
+        <div class="live-bar">
+          <div class="icon"><i class="fas fa-broadcast-tower"></i></div>
+          <div><h2>Live Sensor Telemetry</h2><div class="sub">Streaming from Smart Biogas Meters · Gold Standard AMM v1.1</div></div>
+          <div class="meter">
+            <div class="item"><div class="num" id="liveFlow">0.00</div><div class="lbl">m³/hr flow</div></div>
+            <div class="item"><div class="num" id="liveCH4">0.0</div><div class="lbl">% CH₄ avg</div></div>
+            <div class="item"><div class="num" id="liveRate">0.00</div><div class="lbl">kg CH₄/hr</div></div>
+            <div class="sim-controls">
+              <button id="simToggle" class="on" onclick="toggleSim()"><i class="fas fa-pause"></i></button>
+              <button onclick="boostSim()"><i class="fas fa-bolt"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel"><div class="panel-head"><h3>CO₂e Accumulation — 12 Months</h3><span class="hint">Cumulative verified</span></div><div class="panel-body"><div class="chart-wrap"><canvas id="chartAccumulation"></canvas></div></div></div>
+          <div class="panel"><div class="panel-head"><h3>Credit Contribution by Pathway</h3><span class="hint">YTD</span></div><div class="panel-body"><div class="chart-wrap"><canvas id="chartPathways"></canvas></div></div></div>
+        </div>
+
+        <div class="panel"><div class="panel-head"><h3>Program Activity Log</h3><span class="hint">Live audit trail</span></div><div class="panel-body"><div class="audit-log" id="overviewLog"></div></div></div>
+      </section>
+
+      <!-- LIVE -->
+      <section class="view" id="view-live">
+        <div class="panel">
+          <div class="panel-head"><h3>Sensor Telemetry — Real-Time</h3><span class="hint"><i class="fas fa-circle" style="color:#10b981;font-size:6px;"></i> 2-second refresh</span></div>
+          <div class="panel-body tight">
+            <table class="data">
+              <thead><tr><th>ID</th><th>Biodigester</th><th>Commune</th><th>Dept</th><th>Flow</th><th>Temp</th><th>Press</th><th>CH₄</th><th>Uptime</th><th>Status</th></tr></thead>
+              <tbody id="sensorBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- FLEET -->
+      <section class="view" id="view-fleet">
+        <div class="panel">
+          <div class="panel-head"><h3>Biodigester Fleet</h3><span class="hint">Click any card for drill-down details · 10 m³ reinforced concrete · 50 units</span></div>
+          <div class="panel-body"><div class="fleet-grid" id="fleetGrid"></div></div>
+        </div>
+      </section>
+
+      <!-- SENSOR REGISTRY -->
+      <section class="view" id="view-sensors">
+        <div class="panel">
+          <div class="panel-head"><h3>Sensor Asset Registry</h3><span class="hint">Add · Edit · Decommission</span>
+            <button class="btn btn-primary btn-sm" onclick="openSensorModal('add')" style="margin-left:auto;"><i class="fas fa-plus"></i> Add Sensor</button>
+          </div>
+          <div class="filter-bar">
+            <label>Filter</label>
+            <select id="filterDept"><option value="">All Departments</option></select>
+            <select id="filterCommune"><option value="">All Communes</option></select>
+            <select id="filterStatus">
+              <option value="">All Statuses</option>
+              <option value="ok">Nominal</option><option value="warn">Warning</option>
+              <option value="bad">Fault</option><option value="off">Offline</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="resetFilters()"><i class="fas fa-rotate"></i> Reset</button>
+            <span class="hint" id="sensorFilterCount" style="margin-left:auto;"></span>
+          </div>
+          <div class="panel-body tight">
+            <table class="data">
+              <thead><tr><th>ID</th><th>Model</th><th>Biodigester</th><th>Commune</th><th>Dept</th><th>Installed</th><th>Calibrated</th><th>Firmware</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="sensorRegistryBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- MAP -->
+      <section class="view" id="view-map">
+        <div class="panel">
+          <div class="panel-head"><h3>Haiti Geo Intelligence — Emissions Hot Spots</h3><span class="hint">Click markers for details · Toggle layers</span></div>
+          <div class="panel-body tight">
+            <div class="map-wrap">
+              <div id="map"></div>
+              <div class="map-legend">
+                <div style="font-weight:700;margin-bottom:6px;font-size:10.5px;">Emission Intensity</div>
+                <div class="row"><span class="dot" style="background:#10b981;"></span> Low</div>
+                <div class="row"><span class="dot" style="background:#84cc16;"></span> Moderate</div>
+                <div class="row"><span class="dot" style="background:#f59e0b;"></span> High</div>
+                <div class="row"><span class="dot" style="background:#ef4444;"></span> Very High</div>
+              </div>
+              <div class="map-controls">
+                <button onclick="toggleHeat()" title="Heat map"><i class="fas fa-fire"></i></button>
+                <button onclick="toggleDeforest()" title="Deforestation"><i class="fas fa-tree"></i></button>
+                <button onclick="resetMapView()" title="Reset"><i class="fas fa-expand"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="panel"><div class="panel-head"><h3>Top Emission Hot Spots</h3><span class="hint">Ranked by demand</span></div>
+            <div class="panel-body tight"><table class="data"><thead><tr><th>#</th><th>Department</th><th>Communes</th><th>Charcoal Demand</th><th>Risk</th></tr></thead><tbody id="hotspotBody"></tbody></table></div>
+          </div>
+          <div class="panel"><div class="panel-head"><h3>COSMOS Coverage vs. Gap</h3><span class="hint">By department</span></div>
+            <div class="panel-body"><div class="chart-wrap"><canvas id="chartCoverage"></canvas></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MAINTENANCE -->
+      <section class="view" id="view-maintenance">
+        <div class="panel">
+          <div class="panel-head"><h3>Maintenance Schedule</h3><span class="hint">Upcoming calibration · preventive maintenance</span></div>
+          <div class="panel-body tight" id="maintBody"></div>
+        </div>
+      </section>
+
+      <!-- CALC -->
+      <section class="view" id="view-calc">
+        <div class="grid-2">
+          <div class="panel"><div class="panel-head"><h3>Methodology</h3><span class="hint">Gold Standard AMM v1.1</span></div>
+            <div class="panel-body">
+              <div class="calc-formula">
+<span class="cmt">// Methane avoidance</span>
+ER<span class="op">_</span>CH4 <span class="op">=</span> Q<span class="op">_</span>biogas <span class="op">×</span> f<span class="op">_</span>CH4 <span class="op">×</span> ρ<span class="op">_</span>CH4 <span class="op">×</span> GWP
+
+<span class="cmt">// Charcoal displacement</span>
+ER<span class="op">_</span>charcoal <span class="op">=</span> B<span class="op">_</span>hh <span class="op">×</span> fNRB <span class="op">×</span> EF <span class="op">×</span> N<span class="op">_</span>hh
+
+<span class="cmt">// Total</span>
+ER<span class="op">_</span>total <span class="op">=</span> ER<span class="op">_</span>CH4 <span class="op">+</span> ER<span class="op">_</span>charcoal <span class="op">−</span> Leakage
+              </div>
+            </div>
+          </div>
+          <div class="panel"><div class="panel-head"><h3>Live Calculation</h3><span class="hint" id="calcTimestamp">—</span></div>
+            <div class="panel-body tight">
+              <div class="calc-step"><span class="lbl">Cumulative biogas flow</span><span class="val" id="calcQ">—</span></div>
+              <div class="calc-step"><span class="lbl">Average CH₄ fraction</span><span class="val" id="calcF">—</span></div>
+              <div class="calc-step"><span class="lbl">Methane captured</span><span class="val" id="calcM">—</span></div>
+              <div class="calc-step"><span class="lbl">ER methane avoidance</span><span class="val" id="calcER1">—</span></div>
+              <div class="calc-step"><span class="lbl">ER charcoal displacement</span><span class="val" id="calcER2">—</span></div>
+              <div class="calc-step"><span class="lbl">Leakage</span><span class="val" id="calcLeak">—</span></div>
+              <div class="calc-step"><span class="lbl">Uncertainty</span><span class="val" id="calcUnc">—</span></div>
+              <div class="calc-step total"><span class="lbl">Total tCO₂e</span><span class="val" id="calcTotal">—</span></div>
+              <div class="calc-step"><span class="lbl">Value</span><span class="val" id="calcValue">—</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel"><div class="panel-head"><h3>Sensitivity Parameters</h3><span class="hint">Recalculates live</span></div>
+          <div class="panel-body"><div class="grid-3">
+            <div><label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:6px;">fNRB</label>
+              <input type="range" id="paramFNRB" min="0.5" max="0.95" step="0.01" value="0.85" style="width:100%" oninput="recalcAll()">
+              <div class="mono" style="font-size:11.5px;margin-top:4px;color:var(--primary-dark)" id="fnrbVal">0.85</div></div>
+            <div><label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:6px;">GWP_CH₄</label>
+              <input type="range" id="paramGWP" min="25" max="30" step="1" value="28" style="width:100%" oninput="recalcAll()">
+              <div class="mono" style="font-size:11.5px;margin-top:4px;color:var(--primary-dark)" id="gwpVal">28</div></div>
+            <div><label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:6px;">Credit Price</label>
+              <input type="range" id="paramPrice" min="6" max="25" step="0.5" value="12" style="width:100%" oninput="recalcAll()">
+              <div class="mono" style="font-size:11.5px;margin-top:4px;color:var(--primary-dark)" id="priceVal">$12.00</div></div>
+          </div></div>
+        </div>
+      </section>
+
+      <!-- VERIFY -->
+      <section class="view" id="view-verify">
+        <div class="grid-2">
+          <div class="panel"><div class="panel-head"><h3>Methodology Compliance</h3><span class="hint">ICVCM aligned</span></div>
+            <div class="panel-body tight"><table class="data">
+              <thead><tr><th>Requirement</th><th>Status</th><th>Evidence</th></tr></thead>
+              <tbody>
+                <tr><td>Gold Standard AMM v1.1</td><td><span class="status-dot"></span>Compliant</td><td>PDD on file</td></tr>
+                <tr><td>Sensor calibration</td><td><span class="status-dot"></span>Compliant</td><td>Annual certificates</td></tr>
+                <tr><td>Continuous monitoring</td><td><span class="status-dot"></span>Compliant</td><td>99.2% uptime 30d</td></tr>
+                <tr><td>Leakage accounting</td><td><span class="status-dot"></span>Compliant</td><td>1.8% sensor-measured</td></tr>
+                <tr><td>Uncertainty quantification</td><td><span class="status-dot"></span>Compliant</td><td>±4.2%</td></tr>
+                <tr><td>Corresponding Adjustment</td><td><span class="status-dot warn"></span>In progress</td><td>NDA engagement</td></tr>
+                <tr><td>VVB audit trail</td><td><span class="status-dot warn"></span>Pending</td><td>Q1 2027</td></tr>
+              </tbody>
+            </table></div>
+          </div>
+          <div class="panel"><div class="panel-head"><h3>Data Quality</h3><span class="hint">30 days</span></div>
+            <div class="panel-body tight">
+              <div class="calc-step"><span class="lbl">Sensor uptime</span><span class="val">99.2%</span></div>
+              <div class="calc-step"><span class="lbl">Completeness</span><span class="val">98.7%</span></div>
+              <div class="calc-step"><span class="lbl">Gap-fill</span><span class="val">1.3%</span></div>
+              <div class="calc-step"><span class="lbl">Anomalies</span><span class="val">4</span></div>
+              <div class="calc-step"><span class="lbl">Uncertainty</span><span class="val">±4.2%</span></div>
+              <div class="calc-step"><span class="lbl">Buffer pool</span><span class="val">15%</span></div>
+              <div class="calc-step total"><span class="lbl">Quality score</span><span class="val">A+ (97.4)</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel"><div class="panel-head"><h3>Full Audit Trail</h3><span class="hint">Immutable log</span></div><div class="panel-body"><div class="audit-log" id="fullAuditLog" style="max-height:400px"></div></div></div>
+      </section>
+
+      <!-- ANALYTICS -->
+      <section class="view" id="view-analytics">
+        <div class="panel">
+          <div class="panel-head"><h3>Grouped Analytics</h3><span class="hint">Aggregate by region / model</span></div>
+          <div class="filter-bar">
+            <label>Group by</label>
+            <select id="groupBy" onchange="renderGrouped()">
+              <option value="department">Department</option>
+              <option value="commune">Commune</option>
+              <option value="installed">Installation Year</option>
+              <option value="model">Sensor Model</option>
+            </select>
+            <label style="margin-left:14px">Period</label>
+            <select id="groupPeriod" onchange="renderGrouped()">
+              <option value="ytd">Year to date</option>
+              <option value="30d">Last 30 days</option>
+              <option value="90d">Last 90 days</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="exportGrouped()"><i class="fas fa-file-csv"></i> Export</button>
+          </div>
+          <div class="panel-body tight">
+            <table class="data"><thead id="groupedHead"></thead><tbody id="groupedBody"></tbody></table>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="panel"><div class="panel-head"><h3>Emission Reductions by Group</h3></div><div class="panel-body"><div class="chart-wrap tall"><canvas id="chartGrouped"></canvas></div></div></div>
+          <div class="panel"><div class="panel-head"><h3>Sensor Distribution</h3></div><div class="panel-body"><div class="chart-wrap tall"><canvas id="chartDistribution"></canvas></div></div></div>
+        </div>
+      </section>
+
+      <!-- REPORTS -->
+      <section class="view" id="view-reports">
+        <div class="ai-notice">
+          <div class="ai-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
+          <div>
+            <div class="ai-title">AI Report Generator</div>
+            <div class="ai-body">Select a template below. The AI will auto-populate the draft with your program data. All reports are editable before export.</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Report Templates</h3><span class="hint">Click to generate draft</span></div>
+          <div class="panel-body">
+            <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:18px;">
+              <button class="btn btn-primary" onclick="generateReport('gs')"><i class="fas fa-file-shield"></i> Gold Standard Monitoring</button>
+              <button class="btn btn-navy" onclick="generateReport('gcf')"><i class="fas fa-globe"></i> GCF Readiness</button>
+              <button class="btn btn-ghost" onclick="generateReport('cdb')"><i class="fas fa-water"></i> CDB Regional MRV</button>
+              <button class="btn btn-ghost" onclick="generateReport('nda')"><i class="fas fa-flag"></i> Haiti NDA Report</button>
+              <button class="btn btn-ghost" onclick="generateReport('dfi')"><i class="fas fa-building-columns"></i> DFI Investment Brief</button>
+            </div>
+            <div id="reportEditBar" style="display:none;margin-bottom:12px;gap:8px;align-items:center;">
+              <span style="font-size:11px;font-weight:700;color:var(--text-soft);">EDIT MODE:</span>
+              <button class="btn btn-ghost btn-sm" onclick="toggleEditMode()"><i class="fas fa-pen"></i> Toggle Editable</button>
+              <button class="btn btn-print btn-sm" onclick="printReportPDF()"><i class="fas fa-file-pdf"></i> Export PDF</button>
+              <span style="font-size:10.5px;color:var(--text-mute);margin-left:8px;">Click any text in the preview to edit</span>
+            </div>
+            <div class="report-preview" id="reportPreview" contenteditable="false">
+              <p style="color:var(--text-mute);text-align:center;padding:70px 0;">
+                <i class="fas fa-file-lines" style="font-size:30px;opacity:.3;display:block;margin-bottom:12px;"></i>
+                Select a report template above. The AI will populate it with your program data.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FINANCE -->
+      <section class="view" id="view-finance">
+        <div class="scorecard">
+          <div class="score-item"><div class="ring green">A+</div><div class="lbl">MRV Integrity</div><div class="sub">dMRV verified</div></div>
+          <div class="score-item"><div class="ring blue">98%</div><div class="lbl">Data Quality</div><div class="sub">30-day</div></div>
+          <div class="score-item"><div class="ring amber">Tier 2</div><div class="lbl">Credit Rating</div><div class="sub">CORSIA path</div></div>
+          <div class="score-item"><div class="ring navy">1st</div><div class="lbl">Haiti Mover</div><div class="sub">A6 ready</div></div>
+          <div class="score-item"><div class="ring purple">15%</div><div class="lbl">Buffer Pool</div><div class="sub">Permanence</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Financing Pipeline</h3><span class="hint">DFI alignment</span></div>
+          <div class="panel-body tight">
+            <div class="fin-row header"><div>Source</div><div>Instrument</div><div>Amount</div><div>Status</div></div>
+            <div class="fin-row"><div class="src">GCF Readiness — via NDA</div><div><span class="tag grant">Grant</span></div><div class="amt">$300K–500K</div><div><span class="pill ok">Ready</span></div></div>
+            <div class="fin-row"><div class="src">CDB Regional MRV Extension</div><div><span class="tag grant">Grant</span></div><div class="amt">$200K–500K</div><div><span class="pill ok">Ready</span></div></div>
+            <div class="fin-row"><div class="src">IDB Invest Blended Finance</div><div><span class="tag blend">Blended</span></div><div class="amt">$1M–3M</div><div><span class="pill info">In discussion</span></div></div>
+            <div class="fin-row"><div class="src">World Bank / OGEF</div><div><span class="tag grant">Grant+TA</span></div><div class="amt">$500K–2M</div><div><span class="pill info">Concept</span></div></div>
+            <div class="fin-row"><div class="src">Carbon Pre-Financing</div><div><span class="tag pre">Forward</span></div><div class="amt">$500K–1.5M</div><div><span class="pill warn">Term sheet</span></div></div>
+            <div class="fin-row" style="background:#ecfdf5"><div class="src" style="font-weight:800">Total addressable</div><div></div><div class="amt" style="font-size:15px">$5.5M–15.5M</div><div></div></div>
+          </div>
+        </div>
+        <div class="panel"><div class="panel-head"><h3>5-Year Revenue Projection</h3><span class="hint">Base case</span></div><div class="panel-body"><div class="chart-wrap"><canvas id="chartRevenue"></canvas></div></div></div>
+      </section>
+
+      <!-- COMPLIANCE -->
+      <section class="view" id="view-compliance">
+        <div class="panel">
+          <div class="panel-head"><h3>Standards Alignment Matrix</h3><span class="hint">Cross-mapped</span></div>
+          <div class="panel-body tight"><table class="data">
+            <thead><tr><th>Framework</th><th>Requirement</th><th>Capability</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><strong>ICVCM CCP</strong></td><td>Governance, tracking, MRV, permanence</td><td>Immutable log + buffer pool</td><td><span class="status-dot"></span>Aligned</td></tr>
+              <tr><td><strong>Article 6.2</strong></td><td>Corresponding Adjustments, ITMOs</td><td>CA-ready ledger + NDA path</td><td><span class="status-dot warn"></span>In progress</td></tr>
+              <tr><td><strong>GCF AMA</strong></td><td>RBM, gender, ESS</td><td>SDG + stakeholder registry</td><td><span class="status-dot"></span>Compliant</td></tr>
+              <tr><td><strong>CDB MRV</strong></td><td>Climate finance tracking</td><td>Regional MRV API</td><td><span class="status-dot"></span>Compliant</td></tr>
+              <tr><td><strong>Gold Standard AMM v1.1</strong></td><td>Biogas methodology</td><td>Automated engine</td><td><span class="status-dot"></span>Compliant</td></tr>
+              <tr><td><strong>Verra VCS</strong></td><td>AMS-III.R, AMS-I.E, AMS-I.C</td><td>Multi-methodology</td><td><span class="status-dot"></span>Eligible</td></tr>
+              <tr><td><strong>ISO 14064-2</strong></td><td>GHG quantification</td><td>Uncertainty quant.</td><td><span class="status-dot"></span>Compliant</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div class="grid-3">
+          <div class="panel"><div class="panel-head"><h3>SDG Co-Benefits</h3></div>
+            <div class="panel-body tight">
+              <div class="calc-step"><span class="lbl">SDG 3 — Health</span><span class="val">300 HH</span></div>
+              <div class="calc-step"><span class="lbl">SDG 7 — Energy</span><span class="val">100%</span></div>
+              <div class="calc-step"><span class="lbl">SDG 8 — Jobs</span><span class="val">45 FTE</span></div>
+              <div class="calc-step"><span class="lbl">SDG 13 — Climate</span><span class="val" id="sdg13">—</span></div>
+              <div class="calc-step"><span class="lbl">SDG 15 — Life on Land</span><span class="val">Reduced</span></div>
+            </div>
+          </div>
+          <div class="panel"><div class="panel-head"><h3>Buffer Pool</h3></div>
+            <div class="panel-body tight">
+              <div class="calc-step"><span class="lbl">Total credits</span><span class="val" id="bpTotal">—</span></div>
+              <div class="calc-step"><span class="lbl">Buffer (15%)</span><span class="val" id="bpBuffer">—</span></div>
+              <div class="calc-step"><span class="lbl">Available</span><span class="val" id="bpAvail">—</span></div>
+              <div class="calc-step"><span class="lbl">Reversal risk</span><span class="val">Low</span></div>
+              <div class="calc-step"><span class="lbl">Monitoring</span><span class="val">30 yrs</span></div>
+            </div>
+          </div>
+          <div class="panel"><div class="panel-head"><h3>Corresponding Adjustment</h3></div>
+            <div class="panel-body tight">
+              <div class="calc-step"><span class="lbl">NDA engagement</span><span class="val">Active</span></div>
+              <div class="calc-step"><span class="lbl">Bilateral partners</span><span class="val">3 (target)</span></div>
+              <div class="calc-step"><span class="lbl">ITMO pipeline</span><span class="val">2027</span></div>
+              <div class="calc-step"><span class="lbl">CA registry sync</span><span class="val">Q2 2027</span></div>
+              <div class="calc-step"><span class="lbl">Double-counting guard</span><span class="val">Enabled</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- BIODIGESTER DETAIL MODAL -->
+<div class="modal-overlay" id="bioDetailModal">
+  <div class="modal" style="max-width:800px;">
+    <div class="modal-head">
+      <i class="fas fa-fire-flame-simple" style="color:#f59e0b;font-size:16px"></i>
+      <h3 id="bioDetailTitle">Biodigester Details</h3>
+      <button class="btn btn-print btn-sm" onclick="printBioDetailPDF()" style="margin-left:auto;margin-right:8px;"><i class="fas fa-file-pdf"></i> PDF</button>
+      <button class="close" onclick="closeBioDetail()"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="bioDetailBody"></div>
+  </div>
+</div>
+
+<!-- SENSOR MODAL -->
+<div class="modal-overlay" id="sensorModal">
+  <div class="modal">
+    <div class="modal-head">
+      <i class="fas fa-microchip" style="color:var(--primary);font-size:16px"></i>
+      <h3 id="sensorModalTitle">Add Sensor</h3>
+      <button class="close" onclick="closeSensorModal()"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="sensorEditId">
+      <div class="form-row">
+        <div><label>Sensor ID *</label><input type="text" id="fSensorId" placeholder="SM-013"></div>
+        <div><label>Model *</label>
+          <select id="fSensorModel">
+            <option>Smart Biogas Meter v3</option>
+            <option>NDIR CH₄/CO₂ Analyzer</option>
+            <option>Thermal Mass Flow Meter</option>
+            <option>Pressure Transducer</option>
+            <option>Temperature Probe PT100</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div><label>Biodigester *</label><select id="fSensorBio"></select></div>
+        <div><label>Department *</label><select id="fSensorDept" onchange="updateCommuneOptions()"></select></div>
+      </div>
+      <div class="form-row">
+        <div><label>Commune *</label><select id="fSensorCommune"></select></div>
+        <div><label>Installation Date *</label><input type="date" id="fSensorInstalled"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Last Calibration</label><input type="date" id="fSensorCalibration"></div>
+        <div><label>Firmware</label><input type="text" id="fSensorFirmware" placeholder="v2.4.1"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Status</label>
+          <select id="fSensorStatus">
+            <option value="ok">Nominal</option><option value="warn">Warning</option>
+            <option value="bad">Fault</option><option value="off">Offline</option>
+          </select>
+        </div>
+        <div><label>Notes</label><input type="text" id="fSensorNotes" placeholder="Optional"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeSensorModal()">Cancel</button>
+      <button class="btn btn-danger" id="sensorDeleteBtn" onclick="deleteSensor()" style="display:none"><i class="fas fa-trash"></i> Delete</button>
+      <button class="btn btn-primary" onclick="saveSensor()"><i class="fas fa-floppy-disk"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="guide-bubble" id="guideBubble">
+  <div class="gb-title" id="gbTitle"></div>
+  <div class="gb-body" id="gbBody"></div>
+  <div class="gb-actions">
+    <button class="gb-btn" onclick="closeGuideBubble()">Dismiss</button>
+    <button class="gb-btn primary" onclick="nextGuideStep()" id="gbNext">Next</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="fas fa-info-circle"></i><span id="toastMsg"></span></div>
+
+<script>
+/* ============================================================
+   GEOGRAPHY — Haiti 10 departments + communes
+   ============================================================ */
+const REGIONS = {
+  'Sud':        { center:[18.25,-73.75], intensity:0.72, communes:{'Les Cayes':[18.1936,-73.7497],'Camp-Perrin':[18.3167,-73.8667],'Cavaillon':[18.30,-73.65],'Saint-Louis du Sud':[18.2667,-73.55],'Aquin':[18.2833,-73.40],'Port-Salut':[18.1167,-73.9167],'Torbeck':[18.1667,-73.80],'Chantal':[18.20,-73.8833],'Roche-à-Bateau':[18.1833,-74.00],'Maniche':[18.3167,-73.7833]} },
+  'Grand\'Anse':{ center:[18.65,-74.1167], intensity:0.65, communes:{'Jérémie':[18.65,-74.1167],'Abricots':[18.6333,-74.30],'Bonbon':[18.6167,-74.20],'Moron':[18.5333,-74.25],'Dame-Marie':[18.5667,-74.4167]} },
+  'Nippes':     { center:[18.45,-73.0833], intensity:0.55, communes:{'Miragoâne':[18.45,-73.0833],'Petit-Trou de Nippes':[18.4667,-73.2333],'Anse-à-Veau':[18.50,-73.3333],'Petite Rivière de Nippes':[18.5333,-73.45]} },
+  'Sud-Est':    { center:[18.2342,-72.5348], intensity:0.60, communes:{'Jacmel':[18.2342,-72.5348],'Bainet':[18.1833,-72.75],'Marigot':[18.2333,-72.3167],'Cayes-Jacmel':[18.1833,-72.40]} },
+  'Ouest':      { center:[18.5944,-72.3074], intensity:0.95, communes:{'Port-au-Prince':[18.5944,-72.3074],'Delmas':[18.55,-72.30],'Pétion-Ville':[18.5128,-72.2856],'Croix-des-Bouquets':[18.5833,-72.2333],'Arcahaie':[18.7667,-72.5167]} },
+  'Artibonite': { center:[19.45,-72.6833], intensity:0.85, communes:{'Gonaïves':[19.45,-72.6833],'Saint-Marc':[19.1167,-72.70],'Dessalines':[19.2833,-72.5167],'Verrettes':[19.05,-72.4667],'Ennery':[19.25,-72.4167]} },
+  'Nord':       { center:[19.7578,-72.2014], intensity:0.70, communes:{'Cap-Haïtien':[19.7578,-72.2014],'Limonade':[19.6667,-72.10],'Milot':[19.60,-72.2167],'Acul-du-Nord':[19.6833,-72.3167]} },
+  'Nord-Est':   { center:[19.6667,-71.8333], intensity:0.60, communes:{'Fort-Liberté':[19.6667,-71.8333],'Ouanaminthe':[19.55,-71.7333],'Trou-du-Nord':[19.6333,-72.00],'Terrier-Rouge':[19.6333,-71.9167]} },
+  'Nord-Ouest': { center:[19.9333,-72.8333], intensity:0.75, communes:{'Port-de-Paix':[19.9333,-72.8333],'Saint-Louis du Nord':[19.9333,-72.7167],'Môle-Saint-Nicolas':[19.80,-73.3833],'Jean-Rabel':[19.85,-73.1833]} },
+  'Centre':     { center:[19.15,-72.0167], intensity:0.80, communes:{'Hinche':[19.15,-72.0167],'Mirebalais':[18.8333,-72.10],'Lascahobas':[18.8333,-71.9333],'Belladère':[18.90,-71.7833]} }
+};
+
+/* ============================================================
+   BIODIGESTERS
+   ============================================================ */
+const BIODIGESTERS = [];
+const SOUTHERN = ['Sud','Grand\'Anse','Nippes','Sud-Est'];
+let bc = 0;
+SOUTHERN.forEach(dept => {
+  Object.keys(REGIONS[dept].communes).forEach(commune => {
+    if (bc >= 50) return;
+    bc++;
+    const base = REGIONS[dept].communes[commune];
+    BIODIGESTERS.push({
+      id: 'BIO-'+String(bc).padStart(3,'0'),
+      department: dept, commune: commune, capacity: 10,
+      installed: bc<=10?'2023':bc<=25?'2024':bc<=40?'2025':'2026',
+      households: 6,
+      lat: base[0] + (Math.random()-0.5)*0.02,
+      lng: base[1] + (Math.random()-0.5)*0.02
+    });
+  });
+});
+while (BIODIGESTERS.length < 50){
+  const dept = SOUTHERN[Math.floor(Math.random()*SOUTHERN.length)];
+  const comms = Object.keys(REGIONS[dept].communes);
+  const commune = comms[Math.floor(Math.random()*comms.length)];
+  const base = REGIONS[dept].communes[commune];
+  bc++;
+  BIODIGESTERS.push({
+    id: 'BIO-'+String(bc).padStart(3,'0'),
+    department: dept, commune: commune, capacity: 10, installed: '2026',
+    households: 6, lat: base[0]+(Math.random()-0.5)*0.02, lng: base[1]+(Math.random()-0.5)*0.02
+  });
+}
+
+/* ============================================================
+   SENSORS
+   ============================================================ */
+let SENSORS = [];
+function seedSensors(){
+  SENSORS = [];
+  BIODIGESTERS.slice(0, 12).forEach((b, i) => {
+    SENSORS.push({
+      id: 'SM-'+String(i+1).padStart(3,'0'),
+      model: 'Smart Biogas Meter v3',
+      bioId: b.id, department: b.department, commune: b.commune,
+      installed: b.installed+'-01-15', lastCalibration: '2026-01-15',
+      firmware: 'v2.4.1', notes: '',
+      flow: 0.9+Math.random()*0.6, temp: 36+Math.random()*3,
+      pressure: 3.5+Math.random()*4, ch4: 56+Math.random()*8,
+      uptime: 98+Math.random()*2, status: 'ok', cumulativeFlow: 0
+    });
+  });
+}
+seedSensors();
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const STATE = {
+  simulating: true, tick: 0,
+  params: { fNRB:0.85, GWP:28, price:12, charcoalBaseline:1.0, charcoalEF:3.36, leakage:0.018 },
+  mapReady: false, heatLayer: null, bioLayer: null, deforestLayer: null,
+  heatVisible: true, deforestVisible: false,
+  reportEditMode: false,
+  guideStep: 0,
+  guideActive: false
+};
+
+/* ============================================================
+   AUDIT
+   ============================================================ */
+const AUDIT = [];
+function logAudit(level, msg){
+  AUDIT.push({ ts: new Date().toTimeString().slice(0,8), level, msg });
+  if (AUDIT.length > 300) AUDIT.shift();
+  renderAudits();
+}
+function renderAudits(){
+  const recent = AUDIT.slice(-25).reverse();
+  const html = recent.map(e => `<div><span class="ts">[${e.ts}]</span> <span class="${e.level}">${e.level.toUpperCase()}</span> &nbsp;${e.msg}</div>`).join('');
+  const ov = document.getElementById('overviewLog'); if (ov) ov.innerHTML = html;
+  const fu = document.getElementById('fullAuditLog'); if (fu) fu.innerHTML = html;
+}
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const rnd = (a,b) => Math.random()*(b-a)+a;
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+function showToast(msg, type){
+  const el = $('toast');
+  $('toastMsg').textContent = msg;
+  el.className = 'toast show ' + (type||'');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => { el.className = 'toast'; }, 3000);
+}
+function generateHash(){ return '0x' + Math.random().toString(16).slice(2,10).toUpperCase() + Math.random().toString(16).slice(2,10).toUpperCase(); }
+
+/* ============================================================
+   SENSOR SIMULATION
+   ============================================================ */
+function tickSensors(){
+  if (!STATE.simulating) return;
+  STATE.tick++;
+  SENSORS.forEach(s => {
+    if (s.status === 'off') return;
+    s.flow = clamp(s.flow+rnd(-0.05,0.05), 0.6, 1.6);
+    s.temp = clamp(s.temp+rnd(-0.4,0.4), 34, 41);
+    s.pressure = clamp(s.pressure+rnd(-0.3,0.3), 2, 8);
+    s.ch4 = clamp(s.ch4+rnd(-0.6,0.6), 52, 66);
+    s.uptime = clamp(s.uptime+rnd(-0.05,0.05), 95, 100);
+    s.cumulativeFlow += s.flow * (2/3600);
+    if (s.status !== 'bad'){
+      s.status = (s.flow<0.65 || s.temp>40.5 || s.pressure>7.5) ? 'warn' : 'ok';
+    }
+  });
+  if (STATE.tick % 15 === 0){
+    const s = SENSORS[Math.floor(Math.random()*SENSORS.length)];
+    logAudit('ok', `Telemetry · ${s.id} · flow=${s.flow.toFixed(2)} m³/h · CH₄=${s.ch4.toFixed(1)}%`);
+  }
+  renderSensorTable();
+  renderLiveBar();
+  recalcAll();
+}
+
+function toggleSim(){
+  STATE.simulating = !STATE.simulating;
+  const btn = $('simToggle');
+  btn.classList.toggle('on', STATE.simulating);
+  btn.innerHTML = STATE.simulating ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
+  showToast('Simulation ' + (STATE.simulating ? 'resumed' : 'paused'), 'ok');
+}
+function boostSim(){
+  const s = SENSORS[Math.floor(Math.random()*SENSORS.length)];
+  s.flow = 0.55; s.temp = 41.5; s.status = 'warn';
+  logAudit('warn', `Injected anomaly · ${s.id}`);
+  showToast('Anomaly on ' + s.id, 'warn');
+}
+
+/* ============================================================
+   RENDER: SENSOR TABLE
+   ============================================================ */
+function renderSensorTable(){
+  const tbody = $('sensorBody'); if (!tbody) return;
+  tbody.innerHTML = SENSORS.map(s => {
+    const cls = s.status === 'ok' ? '' : (s.status === 'off' ? ' off' : (s.status === 'bad' ? ' bad' : ' warn'));
+    const txt = { ok:'Nominal', warn:'Warning', bad:'Fault', off:'Offline' }[s.status];
+    return `<tr>
+      <td><span class="sensor-id">${s.id}</span></td>
+      <td>${s.bioId}</td><td>${s.commune}</td><td>${s.department}</td>
+      <td><span class="sensor-val">${s.flow.toFixed(2)}</span></td>
+      <td><span class="sensor-val">${s.temp.toFixed(1)}</span></td>
+      <td><span class="sensor-val">${s.pressure.toFixed(2)}</span></td>
+      <td><span class="sensor-val">${s.ch4.toFixed(1)}</span></td>
+      <td><span class="sensor-val">${s.uptime.toFixed(1)}%</span></td>
+      <td><span class="status-dot${cls}"></span>${txt}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderLiveBar(){
+  const active = SENSORS.filter(s => s.status !== 'off');
+  if (!active.length) return;
+  const flow = active.reduce((a,s) => a+s.flow, 0);
+  const ch4 = active.reduce((a,s) => a+s.ch4, 0)/active.length;
+  const ch4mass = flow * (ch4/100) * 0.717;
+  $('liveFlow').textContent = flow.toFixed(2);
+  $('liveCH4').textContent = ch4.toFixed(1);
+  $('liveRate').textContent = ch4mass.toFixed(3);
+  $('liveTime').textContent = new Date().toTimeString().slice(0,8);
+  const badge = $('navSensorCount'); if (badge) badge.textContent = SENSORS.length;
+}
+
+/* ============================================================
+   BIODIGESTER DRILL-DOWN MODAL
+   ============================================================ */
+function openBioDetail(bioId){
+  const bio = BIODIGESTERS.find(b => b.id === bioId);
+  if (!bio) return;
+  const sensors = SENSORS.filter(s => s.bioId === bioId);
+  const totalFlow = sensors.reduce((a,s) => a + s.cumulativeFlow, 0);
+  const avgCH4 = sensors.length ? sensors.reduce((a,s) => a + s.ch4, 0)/sensors.length : 0;
+  const ch4mass = totalFlow * (avgCH4/100) * 0.717;
+  const er1 = (ch4mass * STATE.params.GWP) / 1000;
+  const hh = bio.households;
+  const er2raw = hh * STATE.params.charcoalBaseline * STATE.params.charcoalEF * STATE.params.fNRB;
+  const er2 = er2raw * (totalFlow / 100);
+  const leak = (er1 + er2) * STATE.params.leakage;
+  const total = Math.max(0, er1 + er2 - leak);
+  const value = total * STATE.params.price;
+
+  $('bioDetailTitle').textContent = bio.id + ' — ' + bio.commune;
+  $('bioDetailBody').innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-card">
+        <div class="lbl">Department</div>
+        <div class="val" style="font-size:15px;">${bio.department}</div>
+      </div>
+      <div class="detail-card">
+        <div class="lbl">Commune</div>
+        <div class="val" style="font-size:15px;">${bio.commune}</div>
+      </div>
+      <div class="detail-card">
+        <div class="lbl">Capacity</div>
+        <div class="val">${bio.capacity} <small>m³</small></div>
+      </div>
+      <div class="detail-card">
+        <div class="lbl">Households</div>
+        <div class="val">${bio.households}</div>
+      </div>
+      <div class="detail-card">
+        <div class="lbl">Installed</div>
+        <div class="val" style="font-size:15px;">${bio.installed}</div>
+      </div>
+      <div class="detail-card">
+        <div class="lbl">Location</div>
+        <div class="val mono" style="font-size:12px;">${bio.lat.toFixed(4)}, ${bio.lng.toFixed(4)}</div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h4>Assigned Sensors (${sensors.length})</h4>
+      ${sensors.length ? sensors.map(s => `
+        <div class="detail-row">
+          <span class="k"><span class="sensor-id">${s.id}</span> · ${s.model}</span>
+          <span class="v"><span class="status-dot${s.status === 'ok' ? '' : ' warn'}"></span>${s.flow.toFixed(2)} m³/h</span>
+        </div>
+      `).join('') : '<div style="color:var(--text-mute);font-size:11.5px;">No sensors assigned to this biodigester yet.</div>'}
+    </div>
+
+    <div class="detail-section">
+      <h4>Emission Reductions (Current Period)</h4>
+      <div class="detail-row"><span class="k">Cumulative biogas flow</span><span class="v mono">${totalFlow.toFixed(3)} m³</span></div>
+      <div class="detail-row"><span class="k">Average CH₄ fraction</span><span class="v mono">${avgCH4.toFixed(1)}%</span></div>
+      <div class="detail-row"><span class="k">Methane captured</span><span class="v mono">${ch4mass.toFixed(3)} kg</span></div>
+      <div class="detail-row"><span class="k">ER — methane avoidance</span><span class="v mono">${er1.toFixed(4)} tCO₂e</span></div>
+      <div class="detail-row"><span class="k">ER — charcoal displacement</span><span class="v mono">${er2.toFixed(4)} tCO₂e</span></div>
+      <div class="detail-row"><span class="k">Less: Leakage</span><span class="v mono">−${leak.toFixed(4)} tCO₂e</span></div>
+      <div class="detail-row" style="background:#ecfdf5;padding:10px 12px;border-radius:8px;margin-top:6px;">
+        <span class="k" style="font-weight:700;color:#047857;">Total verified reductions</span>
+        <span class="v mono" style="color:#047857;font-size:14px;">${total.toFixed(4)} tCO₂e</span>
+      </div>
+      <div class="detail-row"><span class="k">Estimated value @ $${STATE.params.price}/tCO₂e</span><span class="v mono">$${value.toFixed(2)}</span></div>
+    </div>
+
+    <div class="detail-section">
+      <h4>Maintenance Status</h4>
+      <div class="detail-row"><span class="k">Last inspection</span><span class="v">2026-06-15</span></div>
+      <div class="detail-row"><span class="k">Next calibration due</span><span class="v">2027-01-15</span></div>
+      <div class="detail-row"><span class="k">Structural integrity</span><span class="v"><span class="status-dot"></span>Good</span></div>
+      <div class="detail-row"><span class="k">Gas-tight seal</span><span class="v"><span class="status-dot"></span>Verified</span></div>
+    </div>
+  `;
+  $('bioDetailModal').classList.add('show');
+  logAudit('info', `Drill-down viewed · ${bioId} · ${bio.commune}`);
+}
+
+function closeBioDetail(){ $('bioDetailModal').classList.remove('show'); }
+
+/* ============================================================
+   PDF EXPORT — Biodigester Detail
+   ============================================================ */
+function printBioDetailPDF(){
+  const el = $('bioDetailBody');
+  if (!el) return;
+  showToast('Generating PDF…', 'ok');
+  html2canvas(el, { scale:2, backgroundColor:'#ffffff' }).then(canvas => {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const imgData = canvas.toDataURL('image/png');
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const imgW = pageW - 20;
+    const imgH = (canvas.height * imgW) / canvas.width;
+    let y = 15;
+    if (imgH > pageH - 20){
+      let remaining = imgH;
+      let srcY = 0;
+      const srcHPerPage = (pageH - 20) * canvas.width / imgW;
+      while (remaining > 0){
+        const sliceH = Math.min(srcHPerPage, canvas.height - srcY);
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = sliceH;
+        sliceCanvas.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        const sliceData = sliceCanvas.toDataURL('image/png');
+        pdf.addImage(sliceData, 'PNG', 10, 10, imgW, (sliceH * imgW) / canvas.width);
+        remaining -= sliceH;
+        srcY += sliceH;
+        if (remaining > 0) pdf.addPage();
+      }
+    } else {
+      pdf.addImage(imgData, 'PNG', 10, y, imgW, imgH);
+    }
+    pdf.save('COSMOS-Biodigester-'+$('bioDetailTitle').textContent.split('—')[0].trim()+'.pdf');
+    showToast('PDF exported', 'ok');
+    logAudit('info', 'Biodigester detail PDF exported');
+  }).catch(err => {
+    console.error(err);
+    showToast('PDF generation failed', 'err');
+  });
+}
+
+/* ============================================================
+   PDF EXPORT — Current View
+   ============================================================ */
+function printCurrentView(){
+  const activeView = document.querySelector('.view.active');
+  if (!activeView) return;
+  showToast('Generating PDF…', 'ok');
+  html2canvas(activeView, { scale:2, backgroundColor:'#f8fafc' }).then(canvas => {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const imgData = canvas.toDataURL('image/png');
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const imgW = pageW - 20;
+    const imgH = (canvas.height * imgW) / canvas.width;
+    if (imgH > pageH - 20){
+      let remaining = imgH;
+      let srcY = 0;
+      const srcHPerPage = (pageH - 20) * canvas.width / imgW;
+      while (remaining > 0){
+        const sliceH = Math.min(srcHPerPage, canvas.height - srcY);
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = sliceH;
+        sliceCanvas.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        pdf.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, (sliceH * imgW) / canvas.width);
+        remaining -= sliceH;
+        srcY += sliceH;
+        if (remaining > 0) pdf.addPage();
+      }
+    } else {
+      pdf.addImage(imgData, 'PNG', 10, 10, imgW, imgH);
+    }
+    pdf.save('COSMOS-'+$('viewTitle').textContent.replace(/\s+/g,'-')+'-'+Date.now()+'.pdf');
+    showToast('PDF exported', 'ok');
+    logAudit('info', 'View PDF exported');
+  }).catch(err => {
+    console.error(err);
+    showToast('PDF generation failed', 'err');
+  });
+}
+
+function printReportPDF(){
+  const el = $('reportPreview');
+  if (!el || el.textContent.includes('Select a report')){ showToast('Generate a report first', 'warn'); return; }
+  showToast('Generating PDF…', 'ok');
+  const wasEditable = el.contentEditable;
+  el.contentEditable = 'false';
+  html2canvas(el, { scale:2, backgroundColor:'#ffffff' }).then(canvas => {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const imgData = canvas.toDataURL('image/png');
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const imgW = pageW - 20;
+    const imgH = (canvas.height * imgW) / canvas.width;
+    if (imgH > pageH - 20){
+      let remaining = imgH; let srcY = 0;
+      const srcHPerPage = (pageH - 20) * canvas.width / imgW;
+      while (remaining > 0){
+        const sliceH = Math.min(srcHPerPage, canvas.height - srcY);
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvas.width; sliceCanvas.height = sliceH;
+        sliceCanvas.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        pdf.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, (sliceH * imgW) / canvas.width);
+        remaining -= sliceH; srcY += sliceH;
+        if (remaining > 0) pdf.addPage();
+      }
+    } else {
+      pdf.addImage(imgData, 'PNG', 10, 10, imgW, imgH);
+    }
+    pdf.save('COSMOS-Report-'+Date.now()+'.pdf');
+    el.contentEditable = wasEditable;
+    showToast('Report PDF exported', 'ok');
+    logAudit('info', 'Report PDF exported');
+  }).catch(err => { console.error(err); showToast('PDF failed', 'err'); });
+}
+
+/* ============================================================
+   TOGGLE EDIT MODE
+   ============================================================ */
+function toggleEditMode(){
+  STATE.reportEditMode = !STATE.reportEditMode;
+  const el = $('reportPreview');
+  el.contentEditable = STATE.reportEditMode ? 'true' : 'false';
+  el.style.outline = STATE.reportEditMode ? '2px dashed #10b981' : 'none';
+  showToast('Report ' + (STATE.reportEditMode ? 'editable' : 'locked'), 'ok');
+}
+
+/* ============================================================
+   TOOLTIP GUIDE SYSTEM
+   ============================================================ */
+const GUIDE_STEPS = [
+  { target:'[data-guide="kpi-bio"]', title:'Welcome to COSMOS dMRV', body:'This is your program overview. The KPI cards show live metrics from all 50 biodigesters. Click any card to drill into biodigester-level details.', pos:'bottom' },
+  { target:'[data-guide="kpi-co2"]', title:'Verified CO₂e', body:'This KPI shows cumulative verified emission reductions. Values update every 2 seconds as sensor telemetry streams in from the field.', pos:'bottom' },
+  { target:'#chartAccumulation', title:'Accumulation Trend', body:'This chart tracks CO₂e accumulation over the past 12 months. It uses your live sensor data to project the annual credit volume.', pos:'top' },
+  { target:'[data-view="sensors"]', title:'Sensor Registry', body:'Manage your sensor assets here. Add, edit, or decommission sensors. Each sensor is linked to a specific biodigester and location.', pos:'right' },
+  { target:'[data-view="map"]', title:'Geo Intelligence', body:'Interactive map of Haiti showing emission hot spots and biodigester locations. Toggle the heat map and deforestation layers.', pos:'right' },
+  { target:'[data-view="reports"]', title:'AI Report Generator', body:'Generate DFI-ready reports in one click. The AI auto-populates templates for GCF, CDB, NDA, and Gold Standard from your live data.', pos:'right' },
+  { target:'[data-view="maintenance"]', title:'Maintenance Tracking', body:'Track sensor calibration schedules, preventive maintenance, and equipment lifecycle. Never miss a verification deadline.', pos:'right' }
+];
+
+function startGuidedTour(){
+  STATE.guideStep = 0;
+  STATE.guideActive = true;
+  showGuideStep();
+}
+
+function showGuideStep(){
+  const step = GUIDE_STEPS[STATE.guideStep];
+  if (!step){ endGuide(); return; }
+  const target = document.querySelector(step.target);
+  if (!target){ STATE.guideStep++; showGuideStep(); return; }
+  const rect = target.getBoundingClientRect();
+  const bubble = $('guideBubble');
+  $('gbTitle').textContent = step.title;
+  $('gbBody').innerHTML = `<div class="gb-step">Step ${STATE.guideStep+1} of ${GUIDE_STEPS.length}</div><br>${step.body}`;
+  $('gbNext').textContent = STATE.guideStep === GUIDE_STEPS.length - 1 ? 'Finish' : 'Next';
+  bubble.className = 'guide-bubble show';
+  const bubbleW = 320;
+  let left = rect.left;
+  let top = rect.bottom + 16;
+  if (step.pos === 'top') top = rect.top - 180;
+  if (step.pos === 'right'){ left = rect.right + 16; top = rect.top; }
+  if (left + bubbleW > window.innerWidth - 20) left = window.innerWidth - bubbleW - 20;
+  if (left < 10) left = 10;
+  if (top < 10) top = 10;
+  if (top + 200 > window.innerHeight) top = window.innerHeight - 220;
+  bubble.style.left = left + 'px';
+  bubble.style.top = top + 'px';
+  bubble.style.maxWidth = bubbleW + 'px';
+}
+
+function nextGuideStep(){
+  STATE.guideStep++;
+  if (STATE.guideStep >= GUIDE_STEPS.length){ endGuide(); }
+  else { showGuideStep(); }
+}
+
+function closeGuideBubble(){ endGuide(); }
+
+function endGuide(){
+  STATE.guideActive = false;
+  $('guideBubble').className = 'guide-bubble';
+  showToast('Tour complete. Click "Tour" anytime to restart.', 'ok');
+  logAudit('info', 'Guided tour completed');
+}
+
+/* ============================================================
+   SENSOR REGISTRY
+   ============================================================ */
+function renderRegistry(){
+  const tbody = $('sensorRegistryBody'); if (!tbody) return;
+  const dept = $('filterDept').value;
+  const commune = $('filterCommune').value;
+  const status = $('filterStatus').value;
+  const filtered = SENSORS.filter(s => {
+    if (dept && s.department !== dept) return false;
+    if (commune && s.commune !== commune) return false;
+    if (status && s.status !== status) return false;
+    return true;
+  });
+  const cnt = $('sensorFilterCount');
+  if (cnt) cnt.textContent = `Showing ${filtered.length} of ${SENSORS.length}`;
+  if (!filtered.length){
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:36px;color:var(--text-mute);">No sensors match the current filters</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map(s => {
+    const cls = s.status === 'ok' ? '' : (s.status === 'off' ? ' off' : (s.status === 'bad' ? ' bad' : ' warn'));
+    const txt = { ok:'Nominal', warn:'Warning', bad:'Fault', off:'Offline' }[s.status];
+    return `<tr>
+      <td><span class="sensor-id">${s.id}</span></td>
+      <td>${s.model}</td><td>${s.bioId}</td><td>${s.commune}</td><td>${s.department}</td>
+      <td>${s.installed}</td><td>${s.lastCalibration}</td><td>${s.firmware}</td>
+      <td><span class="status-dot${cls}"></span>${txt}</td>
+      <td>
+        <button class="btn btn-ghost btn-icon" title="Edit" onclick="openSensorModal('edit','${s.id}')"><i class="fas fa-pen"></i></button>
+        <button class="btn btn-danger btn-icon" title="Delete" onclick="confirmDelete('${s.id}')"><i class="fas fa-trash"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function populateFilters(){
+  const deptSel = $('filterDept'); if (!deptSel) return;
+  const depts = [...new Set(SENSORS.map(s => s.department))].sort();
+  deptSel.innerHTML = '<option value="">All Departments</option>' + depts.map(d => `<option value="${d}">${d}</option>`).join('');
+  deptSel.onchange = () => { updateFilterCommunes(); renderRegistry(); };
+  $('filterCommune').onchange = renderRegistry;
+  $('filterStatus').onchange = renderRegistry;
+  updateFilterCommunes();
+}
+function updateFilterCommunes(){
+  const d = $('filterDept').value;
+  const sel = $('filterCommune');
+  const comms = d ? [...new Set(SENSORS.filter(s => s.department === d).map(s => s.commune))].sort()
+                  : [...new Set(SENSORS.map(s => s.commune))].sort();
+  sel.innerHTML = '<option value="">All Communes</option>' + comms.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+function resetFilters(){
+  $('filterDept').value = ''; $('filterCommune').value = ''; $('filterStatus').value = '';
+  updateFilterCommunes(); renderRegistry();
+}
+
+/* ============================================================
+   SENSOR MODAL
+   ============================================================ */
+function openSensorModal(mode, id){
+  const modal = $('sensorModal');
+  const title = $('sensorModalTitle');
+  const delBtn = $('sensorDeleteBtn');
+  const bioSel = $('fSensorBio');
+  bioSel.innerHTML = BIODIGESTERS.map(b => `<option value="${b.id}">${b.id} — ${b.commune} (${b.department})</option>`).join('');
+  const deptSel = $('fSensorDept');
+  deptSel.innerHTML = Object.keys(REGIONS).map(d => `<option value="${d}">${d}</option>`).join('');
+
+  if (mode === 'edit' && id){
+    const s = SENSORS.find(x => x.id === id);
+    if (!s) return;
+    title.textContent = 'Edit Sensor — ' + s.id;
+    $('sensorEditId').value = id;
+    $('fSensorId').value = s.id;
+    $('fSensorModel').value = s.model;
+    $('fSensorBio').value = s.bioId;
+    $('fSensorDept').value = s.department;
+    updateCommuneOptions();
+    $('fSensorCommune').value = s.commune;
+    $('fSensorInstalled').value = s.installed;
+    $('fSensorCalibration').value = s.lastCalibration;
+    $('fSensorFirmware').value = s.firmware;
+    $('fSensorStatus').value = s.status;
+    $('fSensorNotes').value = s.notes || '';
+    delBtn.style.display = 'inline-flex';
+  } else {
+    title.textContent = 'Add Sensor';
+    $('sensorEditId').value = '';
+    $('fSensorId').value = 'SM-' + String(SENSORS.length + 1).padStart(3,'0');
+    $('fSensorModel').value = 'Smart Biogas Meter v3';
+    $('fSensorBio').value = BIODIGESTERS[0].id;
+    $('fSensorDept').value = 'Sud';
+    updateCommuneOptions();
+    $('fSensorInstalled').value = new Date().toISOString().slice(0,10);
+    $('fSensorCalibration').value = new Date().toISOString().slice(0,10);
+    $('fSensorFirmware').value = 'v2.4.1';
+    $('fSensorStatus').value = 'ok';
+    $('fSensorNotes').value = '';
+    delBtn.style.display = 'none';
+  }
+  modal.classList.add('show');
+}
+function updateCommuneOptions(){
+  const dept = $('fSensorDept').value;
+  const comms = Object.keys(REGIONS[dept].communes);
+  $('fSensorCommune').innerHTML = comms.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+function closeSensorModal(){ $('sensorModal').classList.remove('show'); }
+
+function saveSensor(){
+  const id = $('fSensorId').value.trim();
+  const model = $('fSensorModel').value;
+  const bioId = $('fSensorBio').value;
+  const dept = $('fSensorDept').value;
+  const commune = $('fSensorCommune').value;
+  const installed = $('fSensorInstalled').value;
+  const cal = $('fSensorCalibration').value;
+  const fw = $('fSensorFirmware').value.trim();
+  const status = $('fSensorStatus').value;
+  const notes = $('fSensorNotes').value.trim();
+  const editId = $('sensorEditId').value;
+
+  if (!id || !model || !bioId || !dept || !commune){
+    showToast('Please complete all required fields', 'err'); return;
+  }
+  const bio = BIODIGESTERS.find(b => b.id === bioId);
+  const base = REGIONS[dept].communes[commune];
+  const lat = bio ? bio.lat : base[0];
+  const lng = bio ? bio.lng : base[1];
+
+  if (editId){
+    const i = SENSORS.findIndex(s => s.id === editId);
+    if (i >= 0){
+      SENSORS[i] = { ...SENSORS[i], id, model, bioId, department: dept, commune, installed, lastCalibration: cal, firmware: fw, status, notes, lat, lng };
+      logAudit('info', `Sensor updated · ${id} · ${commune}`);
+      showToast(`Sensor ${id} updated`, 'ok');
+    }
+  } else {
+    if (SENSORS.find(s => s.id === id)){ showToast('Sensor ID already exists', 'err'); return; }
+    SENSORS.push({
+      id, model, bioId, department: dept, commune, installed,
+      lastCalibration: cal, firmware: fw, status, notes,
+      flow: 0.9+Math.random()*0.6, temp: 36+Math.random()*3,
+      pressure: 3.5+Math.random()*4, ch4: 56+Math.random()*8,
+      uptime: 98+Math.random()*2, cumulativeFlow: 0, lat, lng
+    });
+    logAudit('ok', `Sensor registered · ${id} · ${commune}`);
+    showToast(`Sensor ${id} added`, 'ok');
+  }
+  closeSensorModal();
+  populateFilters(); renderRegistry(); renderSensorTable(); renderLiveBar();
+  if (STATE.mapReady) renderMapLayers();
+  renderMaintenance();
+}
+function confirmDelete(id){
+  const s = SENSORS.find(x => x.id === id);
+  if (!s) return;
+  if (confirm(`Delete sensor ${id} (${s.commune})?`)){
+    SENSORS = SENSORS.filter(x => x.id !== id);
+    logAudit('warn', `Sensor removed · ${id}`);
+    showToast(`Sensor ${id} removed`, 'warn');
+    populateFilters(); renderRegistry(); renderSensorTable(); renderLiveBar();
+    if (STATE.mapReady) renderMapLayers();
+    renderMaintenance();
+  }
+}
+function deleteSensor(){
+  const id = $('sensorEditId').value;
+  if (id){ closeSensorModal(); setTimeout(() => confirmDelete(id), 100); }
+}
+
+/* ============================================================
+   MAP
+   ============================================================ */
+let map = null;
+function initMap(){
+  if (STATE.mapReady || typeof L === 'undefined') return;
+  try {
+    map = L.map('map').setView([18.9, -72.9], 8);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom:18, subdomains:'abcd' }).addTo(map);
+    renderMapLayers();
+    STATE.mapReady = true;
+    setTimeout(() => map.invalidateSize(), 200);
+  } catch(e){ console.error(e); }
+}
+function renderMapLayers(){
+  if (!STATE.mapReady) return;
+  if (STATE.heatLayer) map.removeLayer(STATE.heatLayer);
+  if (STATE.bioLayer) map.removeLayer(STATE.bioLayer);
+  if (STATE.deforestLayer) map.removeLayer(STATE.deforestLayer);
+
+  const heatPts = [];
+  Object.keys(REGIONS).forEach(d => {
+    const c = REGIONS[d].center;
+    const inten = REGIONS[d].intensity;
+    const n = Math.round(inten*20);
+    for (let i=0; i<n; i++) heatPts.push([c[0]+(Math.random()-0.5)*0.6, c[1]+(Math.random()-0.5)*0.6, inten]);
+  });
+  STATE.heatLayer = L.heatLayer(heatPts, { radius:35, blur:40, maxZoom:10, max:1.0,
+    gradient:{ 0.2:'#10b981', 0.5:'#84cc16', 0.7:'#f59e0b', 1.0:'#ef4444' } });
+  if (STATE.heatVisible) STATE.heatLayer.addTo(map);
+
+  STATE.bioLayer = L.layerGroup();
+  BIODIGESTERS.forEach(b => {
+    const sensors = SENSORS.filter(s => s.bioId === b.id);
+    const color = sensors.length ? '#10b981' : '#94a3b8';
+    const circle = L.circleMarker([b.lat, b.lng], {
+      radius: sensors.length ? 8 : 5,
+      fillColor: color, color:'#fff', weight:2, fillOpacity:0.9
+    }).bindPopup(`<div style="font-family:Inter,sans-serif;min-width:200px;">
+      <div style="font-weight:800;font-size:13px;">${b.id}</div>
+      <div style="font-size:11px;color:#64748b;margin-bottom:6px;">${b.commune}, ${b.department}</div>
+      <div style="font-size:11px;line-height:1.7;">
+        <div><strong>Capacity:</strong> ${b.capacity} m³</div>
+        <div><strong>Households:</strong> ${b.households}</div>
+        <div><strong>Sensors:</strong> ${sensors.length}</div>
+      </div>
+      <button onclick="openBioDetail('${b.id}');" style="margin-top:8px;width:100%;padding:6px;background:#10b981;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;">View Details</button>
+    </div>`);
+    STATE.bioLayer.addLayer(circle);
+  });
+  STATE.bioLayer.addTo(map);
+
+  STATE.deforestLayer = L.layerGroup();
+  Object.keys(REGIONS).forEach(d => {
+    const r = REGIONS[d];
+    const radius = 8000 + r.intensity*12000;
+    const circle = L.circle(r.center, { radius, color:'#ef4444', weight:1, opacity:0.4, fillColor:'#ef4444', fillOpacity:0.08 })
+      .bindTooltip(`${d} — Deforestation pressure: ${(r.intensity*100).toFixed(0)}%`, { sticky:true });
+    STATE.deforestLayer.addLayer(circle);
+  });
+  if (STATE.deforestVisible) STATE.deforestLayer.addTo(map);
+}
+function toggleHeat(){
+  STATE.heatVisible = !STATE.heatVisible;
+  if (STATE.heatVisible) STATE.heatLayer.addTo(map); else map.removeLayer(STATE.heatLayer);
+  showToast('Heat map ' + (STATE.heatVisible ? 'on' : 'off'), 'ok');
+}
+function toggleDeforest(){
+  STATE.deforestVisible = !STATE.deforestVisible;
+  if (STATE.deforestVisible) STATE.deforestLayer.addTo(map); else map.removeLayer(STATE.deforestLayer);
+  showToast('Deforestation layer ' + (STATE.deforestVisible ? 'on' : 'off'), 'ok');
+}
+function resetMapView(){ if (map) map.setView([18.9, -72.9], 8); }
+
+function renderHotspots(){
+  const body = $('hotspotBody'); if (!body) return;
+  const hs = Object.keys(REGIONS).map(d => ({
+    dept: d, intensity: REGIONS[d].intensity,
+    communes: Object.keys(REGIONS[d].communes).length,
+    demand: Math.round(REGIONS[d].intensity * 150000)
+  })).sort((a,b) => b.intensity - a.intensity).slice(0,8);
+  body.innerHTML = hs.map((h,i) => {
+    const risk = h.intensity > 0.85 ? 'Critical' : (h.intensity > 0.7 ? 'High' : 'Moderate');
+    const cls = h.intensity > 0.85 ? 'bad' : (h.intensity > 0.7 ? 'warn' : '');
+    return `<tr><td>${i+1}</td><td><strong>${h.dept}</strong></td><td>${h.communes}</td><td><span class="sensor-val">${h.demand.toLocaleString()} t/yr</span></td><td><span class="status-dot${cls}"></span>${risk}</td></tr>`;
+  }).join('');
+}
+
+/* ============================================================
+   MAINTENANCE
+   ============================================================ */
+function renderMaintenance(){
+  const body = $('maintBody'); if (!body) return;
+  const items = [];
+  SENSORS.forEach(s => {
+    const daysSinceCal = Math.floor((Date.now() - new Date(s.lastCalibration).getTime()) / (1000*60*60*24));
+    const daysUntilDue = 365 - daysSinceCal;
+    let status = 'ok';
+    if (daysUntilDue < 0) status = 'overdue';
+    else if (daysUntilDue < 60) status = 'due';
+    items.push({ id: s.id, type: 'Sensor Calibration', due: daysUntilDue, status, location: s.commune });
+  });
+  // Add biodigester inspections
+  BIODIGESTERS.slice(0, 20).forEach(b => {
+    const daysUntil = Math.floor(180 - Math.random()*200);
+    let status = 'ok';
+    if (daysUntil < 0) status = 'overdue';
+    else if (daysUntil < 30) status = 'due';
+    items.push({ id: b.id, type: 'Structural Inspection', due: daysUntil, status, location: b.commune });
+  });
+  items.sort((a,b) => a.due - b.due);
+  const overdue = items.filter(i => i.status === 'overdue').length;
+  const due = items.filter(i => i.status === 'due').length;
+  const badge = $('navMaintCount');
+  if (badge) badge.textContent = overdue + due;
+
+  body.innerHTML = `
+    <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;gap:16px;font-size:11.5px;">
+      <span><span class="status-dot bad"></span>${overdue} overdue</span>
+      <span><span class="status-dot warn"></span>${due} due soon</span>
+      <span><span class="status-dot"></span>${items.length - overdue - due} scheduled</span>
+    </div>
+    ${items.slice(0, 30).map(i => `
+      <div class="maint-row">
+        <div class="m-icon ${i.status}">
+          <i class="fas ${i.status === 'overdue' ? 'fa-exclamation-triangle' : i.status === 'due' ? 'fa-clock' : 'fa-check'}"></i>
+        </div>
+        <div style="flex:1;">
+          <div style="font-weight:600;">${i.type} — ${i.id}</div>
+          <div style="font-size:10.5px;color:var(--text-mute);">${i.location}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="mono" style="font-weight:700;font-size:11px;color:${i.status === 'overdue' ? 'var(--danger)' : i.status === 'due' ? 'var(--warning)' : 'var(--primary)'};">
+            ${i.due < 0 ? Math.abs(i.due) + 'd overdue' : i.due + 'd remaining'}
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+/* ============================================================
+   CALCULATIONS
+   ============================================================ */
+function computeCredits(){
+  const active = SENSORS.filter(s => s.status !== 'off');
+  if (!active.length) return { flow:0, ch4Fraction:0, ch4Mass:0, ER1:0, ER2:0, leakage:0, total:0, value:0, uncertainty:0.042 };
+  const flow = active.reduce((a,s) => a+s.cumulativeFlow, 0);
+  const ch4 = active.reduce((a,s) => a+s.ch4, 0)/active.length/100;
+  const ch4mass = flow * ch4 * 0.717;
+  const ER1 = (ch4mass * STATE.params.GWP) / 1000;
+  const hh = 50 * 6;
+  const char = hh * STATE.params.charcoalBaseline;
+  const ER2raw = char * STATE.params.charcoalEF * STATE.params.fNRB;
+  const ratio = active.length / 50;
+  const ER2 = ER2raw * ratio * (flow / 100);
+  const leak = (ER1 + ER2) * STATE.params.leakage;
+  const total = Math.max(0, ER1 + ER2 - leak);
+  const unc = Math.sqrt(0.02*0.02 + 0.03*0.03 + 0.005*0.005 + 0.05*0.05);
+  return { flow, ch4Fraction: ch4, ch4Mass: ch4mass, ER1, ER2, leakage: leak, total, value: total*STATE.params.price, uncertainty: unc };
+}
+
+function recalcAll(){
+  STATE.params.fNRB = parseFloat($('paramFNRB').value);
+  STATE.params.GWP = parseFloat($('paramGWP').value);
+  STATE.params.price = parseFloat($('paramPrice').value);
+  $('fnrbVal').textContent = STATE.params.fNRB.toFixed(2);
+  $('gwpVal').textContent = STATE.params.GWP.toFixed(0);
+  $('priceVal').textContent = '$' + STATE.params.price.toFixed(2);
+
+  const r = computeCredits();
+  if ($('calcQ')){
+    $('calcQ').textContent = r.flow.toFixed(3) + ' m³';
+    $('calcF').textContent = (r.ch4Fraction*100).toFixed(2) + ' %';
+    $('calcM').textContent = r.ch4Mass.toFixed(3) + ' kg';
+    $('calcER1').textContent = r.ER1.toFixed(4) + ' tCO₂e';
+    $('calcER2').textContent = r.ER2.toFixed(4) + ' tCO₂e';
+    $('calcLeak').textContent = r.leakage.toFixed(4) + ' tCO₂e (' + (STATE.params.leakage*100).toFixed(1) + '%)';
+    $('calcUnc').textContent = '±' + (r.uncertainty*100).toFixed(2) + '%';
+    $('calcTotal').textContent = r.total.toFixed(4) + ' tCO₂e';
+    $('calcValue').textContent = '$' + r.value.toFixed(2);
+    $('calcTimestamp').textContent = 'Updated ' + new Date().toTimeString().slice(0,8);
+  }
+  if ($('kpiCO2')) $('kpiCO2').innerHTML = r.total.toFixed(3) + '<span class="unit">tCO₂e</span>';
+  if ($('kpiValue')) $('kpiValue').innerHTML = '$' + r.value.toFixed(2) + '<span class="unit">USD</span>';
+  if ($('kpiSensors')) $('kpiSensors').innerHTML = SENSORS.length + '<span class="unit">/ ' + SENSORS.length + '</span>';
+  if ($('kpiBio')) $('kpiBio').innerHTML = BIODIGESTERS.length + '<span class="unit">units</span>';
+  if ($('sdg13')) $('sdg13').textContent = r.total.toFixed(2) + ' tCO₂e';
+  if ($('bpTotal')) $('bpTotal').textContent = r.total.toFixed(3) + ' tCO₂e';
+  if ($('bpBuffer')) $('bpBuffer').textContent = (r.total*0.15).toFixed(3) + ' tCO₂e';
+  if ($('bpAvail')) $('bpAvail').textContent = (r.total*0.85).toFixed(3) + ' tCO₂e';
+}
+
+/* ============================================================
+   FLEET
+   ============================================================ */
+function renderFleet(){
+  const grid = $('fleetGrid'); if (!grid) return;
+  grid.innerHTML = BIODIGESTERS.map(b => {
+    const sensors = SENSORS.filter(s => s.bioId === b.id);
+    const lifetime = (5 + Math.random()*8).toFixed(1);
+    return `<div class="bio-card" onclick="openBioDetail('${b.id}')">
+      <div class="top"><span class="id">${b.id}</span><span class="status-dot${sensors.length ? '' : ' off'}"></span></div>
+      <div class="drill-hint">Click for details →</div>
+      <div class="loc">${b.commune}</div>
+      <div class="sub">${b.department} · Installed ${b.installed}</div>
+      <div class="stats">
+        <div><div class="stat-lbl">Sensors</div><div class="stat-val">${sensors.length}</div></div>
+        <div><div class="stat-lbl">Capacity</div><div class="stat-val">${b.capacity}m³</div></div>
+        <div><div class="stat-lbl">tCO₂e</div><div class="stat-val">${lifetime}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   GROUPED ANALYTICS
+   ============================================================ */
+let chartGrouped, chartDistribution;
+function renderGrouped(){
+  const by = $('groupBy').value;
+  const period = $('groupPeriod').value;
+  const mul = { 'ytd':1.0, '30d':0.08, '90d':0.25 }[period] || 1.0;
+
+  const groups = {};
+  SENSORS.forEach(s => {
+    const key = by === 'department' ? s.department
+              : by === 'commune' ? s.commune
+              : by === 'installed' ? (s.installed||'').slice(0,4)
+              : s.model;
+    if (!groups[key]) groups[key] = { sensors: [], flow: 0, ch4: 0 };
+    groups[key].sensors.push(s);
+    groups[key].flow += s.cumulativeFlow;
+    groups[key].ch4 += s.ch4;
+  });
+
+  const rows = Object.keys(groups).map(key => {
+    const g = groups[key];
+    const avgCH4 = g.ch4 / g.sensors.length / 100;
+    const ch4mass = g.flow * avgCH4 * 0.717;
+    const ER1 = (ch4mass * STATE.params.GWP) / 1000;
+    const hh = g.sensors.length * 6;
+    const ER2raw = hh * STATE.params.charcoalBaseline * STATE.params.charcoalEF * STATE.params.fNRB;
+    const ER2 = ER2raw * (g.sensors.length / SENSORS.length) * (g.flow / 50);
+    const leak = (ER1 + ER2) * STATE.params.leakage;
+    const credits = Math.max(0, ER1 + ER2 - leak) * mul;
+    return { key, count: g.sensors.length, credits, value: credits * STATE.params.price };
+  }).sort((a,b) => b.credits - a.credits);
+
+  const label = { department:'Department', commune:'Commune', installed:'Installation Year', model:'Sensor Model' }[by];
+  $('groupedHead').innerHTML = `<tr><th>${label}</th><th>Sensors</th><th>tCO₂e</th><th>Value (USD)</th><th>Avg / Sensor</th></tr>`;
+  const total = rows.reduce((a,r) => a+r.credits, 0);
+  $('groupedBody').innerHTML = rows.map(r => `<tr>
+    <td><strong>${r.key}</strong></td>
+    <td><span class="sensor-val">${r.count}</span></td>
+    <td><span class="sensor-val">${r.credits.toFixed(3)}</span></td>
+    <td><span class="sensor-val">$${r.value.toFixed(2)}</span></td>
+    <td><span class="sensor-val">${(r.credits/r.count).toFixed(4)}</span></td>
+  </tr>`).join('') + `<tr style="background:#ecfdf5;font-weight:700;">
+    <td>TOTAL</td><td>${rows.reduce((a,r) => a+r.count, 0)}</td>
+    <td>${total.toFixed(3)}</td>
+    <td>$${rows.reduce((a,r) => a+r.value, 0).toFixed(2)}</td>
+    <td>—</td></tr>`;
+
+  if (chartGrouped) chartGrouped.destroy();
+  if (chartDistribution) chartDistribution.destroy();
+  const cg = $('chartGrouped');
+  if (cg){
+    chartGrouped = new Chart(cg, {
+      type: 'bar',
+      data: { labels: rows.map(r => r.key), datasets: [{ label:'tCO₂e', data: rows.map(r => r.credits), backgroundColor:'#10b981', borderRadius:6 }]},
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ display:false }},
+        scales:{ y:{ beginAtZero:true, grid:{ color:'#e2e8f0' }}, x:{ grid:{ display:false }}}
+      }
+    });
+  }
+  const cd = $('chartDistribution');
+  if (cd){
+    const pal = ['#10b981','#3b82f6','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#ec4899','#84cc16','#f97316','#6366f1'];
+    chartDistribution = new Chart(cd, {
+      type: 'doughnut',
+      data: { labels: rows.map(r => r.key), datasets: [{ data: rows.map(r => r.count), backgroundColor: rows.map((_,i) => pal[i%pal.length]), borderWidth:0 }]},
+      options: { responsive:true, maintainAspectRatio:false, cutout:'60%',
+        plugins:{ legend:{ position:'right', labels:{ font:{ size:10 }, padding:10, boxWidth:11 }}}
+      }
+    });
+  }
+}
+function exportGrouped(){
+  const rows = document.querySelectorAll('#groupedBody tr');
+  let csv = 'Group,Sensors,tCO2e,Value USD\n';
+  rows.forEach(r => {
+    const cells = [...r.cells].map(c => c.textContent.replace(/,/g,''));
+    if (cells.length) csv += cells.join(',') + '\n';
+  });
+  downloadCSV(csv, 'cosmos-grouped-analytics.csv');
+}
+
+/* ============================================================
+   CHARTS
+   ============================================================ */
+let chartAcc, chartPath, chartRev, chartCov;
+function initCharts(){
+  const months = ['Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'];
+  const accum = []; let run = 0;
+  months.forEach(() => { run += 65+Math.random()*35; accum.push(run); });
+
+  if ($('chartAccumulation')) chartAcc = new Chart($('chartAccumulation'), {
+    type: 'line',
+    data: { labels: months, datasets: [{ label:'tCO₂e', data:accum, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,0.08)', borderWidth:2.5, fill:true, tension:0.4, pointRadius:3, pointBackgroundColor:'#10b981' }]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false }},
+      scales:{ y:{ beginAtZero:true, grid:{ color:'#e2e8f0' }}, x:{ grid:{ display:false }}}
+    }
+  });
+
+  if ($('chartPathways')) chartPath = new Chart($('chartPathways'), {
+    type: 'doughnut',
+    data: { labels:['Methane','Charcoal'], datasets:[{ data:[62,38], backgroundColor:['#10b981','#3b82f6'], borderWidth:0 }]},
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'65%',
+      plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11 }, padding:12, boxWidth:12 }}}
+    }
+  });
+
+  if ($('chartRevenue')) chartRev = new Chart($('chartRevenue'), {
+    type: 'bar',
+    data:{ labels:['2027','2028','2029','2030','2031'],
+      datasets:[
+        { label:'Credits', data:[868,868,868,868,868], backgroundColor:'#10b981', borderRadius:6 },
+        { label:'Revenue ($)', data:[6944,8680,10416,12152,13020], backgroundColor:'#3b82f6', borderRadius:6, yAxisID:'y1' }
+      ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11 }, padding:12, boxWidth:12 }}},
+      scales:{ y:{ beginAtZero:true, position:'left', grid:{ color:'#e2e8f0' }},
+                y1:{ beginAtZero:true, position:'right', grid:{ display:false }},
+                x:{ grid:{ display:false }}}
+    }
+  });
+
+  if ($('chartCoverage')){
+    const cov = [
+      { dept:'Ouest', covered:0, gap:100 }, { dept:'Artibonite', covered:0, gap:85 },
+      { dept:'Nord', covered:0, gap:70 }, { dept:'Centre', covered:0, gap:80 },
+      { dept:'Sud', covered:78, gap:22 }, { dept:'Grand\'Anse', covered:62, gap:38 },
+      { dept:'Nippes', covered:55, gap:45 }, { dept:'Sud-Est', covered:48, gap:52 }
+    ];
+    chartCov = new Chart($('chartCoverage'), {
+      type: 'bar',
+      data:{ labels: cov.map(c => c.dept),
+        datasets:[
+          { label:'COSMOS coverage', data: cov.map(c => c.covered), backgroundColor:'#10b981', borderRadius:6, stack:'a' },
+          { label:'Opportunity gap', data: cov.map(c => c.gap), backgroundColor:'#e2e8f0', borderRadius:6, stack:'a' }
+        ]},
+      options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y',
+        plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11 }, padding:12, boxWidth:12 }}},
+        scales:{ x:{ stacked:true, beginAtZero:true, grid:{ color:'#e2e8f0' }},
+                  y:{ stacked:true, grid:{ display:false }}}
+      }
+    });
+  }
+}
+
+/* ============================================================
+   AI REPORT GENERATOR
+   ============================================================ */
+function generateReport(type){
+  switchView('reports');
+  const r = computeCredits();
+  const now = new Date().toLocaleString();
+  const preview = $('reportPreview');
+  const hash = generateHash();
+  const deptSummary = [...new Set(SENSORS.map(s => s.department))].map(d => {
+    const sen = SENSORS.filter(s => s.department === d);
+    return { dept: d, count: sen.length, credits: sen.length * 0.5 };
+  });
+  $('reportEditBar').style.display = 'flex';
+
+  const templates = {
+
+    gs: `<h1>Gold Standard Monitoring Report</h1>
+      <div style="color:var(--text-mute);font-size:10.5px;">COSMOS Solution · Biogas Program · Southern Haiti</div>
+      <div class="meta">
+        <div><span>Methodology:</span> AMM v1.1 (Animal Manure Management)</div>
+        <div><span>Monitoring period:</span> 01 Jan 2026 – 30 Sep 2026</div>
+        <div><span>Project ID:</span> GS-COSMOS-2027-001</div>
+        <div><span>Generated:</span> ${now}</div>
+      </div>
+      <h2>A. General Description of Project Activity</h2>
+      <p>COSMOS Solution operates ${BIODIGESTERS.length} dome-type reinforced concrete biodigesters (10 m³ capacity) across ${deptSummary.length} departments in Southern Haiti. Each biodigester processes 150–170 kg of organic waste daily, producing biogas for clean cooking and liquid organic fertilizer.</p>
+      <h2>B. Implementation Status</h2>
+      <table><tr><th>Parameter</th><th>Value</th></tr>
+        <tr><td>Biodigesters operational</td><td>${BIODIGESTERS.length}</td></tr>
+        <tr><td>Sensors deployed</td><td>${SENSORS.length}</td></tr>
+        <tr><td>Households served</td><td>${BIODIGESTERS.length * 6}</td></tr>
+        <tr><td>Sensor uptime (30-day)</td><td>99.2%</td></tr>
+        <tr><td>Data completeness</td><td>98.7%</td></tr>
+      </table>
+      <h2>C. Monitoring System Description</h2>
+      <p>Smart Biogas Meters installed between biodigester and point of use. Temperature and pressure sensors confirm combustion. NDIR CH₄/CO₂ analyzers measure methane concentration. Data streams every 2 seconds to the dMRV cloud platform with 30-day local storage redundancy.</p>
+      <h2>D. Data and Parameters Monitored</h2>
+      <table><tr><th>Parameter</th><th>Value</th><th>Source</th></tr>
+        <tr><td>Cumulative biogas flow</td><td>${r.flow.toFixed(3)} m³</td><td>Smart Biogas Meter</td></tr>
+        <tr><td>Average CH₄ fraction</td><td>${(r.ch4Fraction*100).toFixed(2)}%</td><td>NDIR sensor</td></tr>
+        <tr><td>Methane captured</td><td>${r.ch4Mass.toFixed(3)} kg</td><td>Calculated</td></tr>
+        <tr><td>Leakage rate</td><td>${(STATE.params.leakage*100).toFixed(1)}%</td><td>Pressure differential</td></tr>
+      </table>
+      <h2>E. Emission Reductions Calculation</h2>
+      <table><tr><th>Pathway</th><th>tCO₂e</th></tr>
+        <tr><td>Methane avoidance (ER_CH4)</td><td>${r.ER1.toFixed(4)}</td></tr>
+        <tr><td>Charcoal displacement (ER_charcoal)</td><td>${r.ER2.toFixed(4)}</td></tr>
+        <tr><td>Less: Leakage</td><td>−${r.leakage.toFixed(4)}</td></tr>
+        <tr style="font-weight:700;background:#ecfdf5;"><td>Total verified reductions</td><td>${r.total.toFixed(4)} tCO₂e</td></tr>
+      </table>
+      <h2>F. Buffer Pool and Permanence</h2>
+      <table><tr><th>Item</th><th>Value</th></tr>
+        <tr><td>Total credits</td><td>${r.total.toFixed(3)} tCO₂e</td></tr>
+        <tr><td>Buffer allocation (15%)</td><td>${(r.total*0.15).toFixed(3)} tCO₂e</td></tr>
+        <tr><td>Available for issuance</td><td>${(r.total*0.85).toFixed(3)} tCO₂e</td></tr>
+      </table>
+      <div class="signature">Report generated by GCFTportal dMRV Platform · ${now}<br>Audit hash: ${hash} · This is a draft — edit before submission</div>`,
+
+    gcf: `<h1>GCF Readiness Summary</h1>
+      <div style="color:var(--text-mute);font-size:10.5px;">COSMOS Solution · Haiti NDA Submission Support</div>
+      <div class="meta">
+        <div><span>Prepared for:</span> Ministry of Environment (NDA)</div>
+        <div><span>Country Program:</span> Validated Sept 2025</div>
+        <div><span>Priority sectors:</span> Clean cooking, renewable energy</div>
+        <div><span>Generated:</span> ${now}</div>
+      </div>
+      <h2>1. Summary</h2>
+      <p>COSMOS Solution requests GCF Readiness support to scale its dMRV-enabled biogas program. The project directly addresses two named mitigation priorities in Haiti's GCF Country Program: clean cooking (replacing charcoal) and renewable energy (biogas thermal generation).</p>
+      <h2>2. Situation Analysis</h2>
+      <p>Haiti has lost 84 kha of tree cover since 2001, equivalent to 38 Mt CO₂e emissions. Annual charcoal production of 946,500 metric tons drives continued deforestation. COSMOS biodigesters directly reduce charcoal demand while providing clean cooking fuel.</p>
+      <h2>3. Theory of Change</h2>
+      <p>IF COSMOS deploys dMRV-enabled biodigesters at scale, THEN verified carbon credits will generate sustainable revenue, BECAUSE digital MRV provides the data integrity that carbon markets require.</p>
+      <h2>4. Readiness Results Management Framework (RRMF) Alignment</h2>
+      <table><tr><th>Output #</th><th>Output</th><th>Indicator</th></tr>
+        <tr><td>1.1.1</td><td>NDA staff trained</td><td>Number of staff trained in MRV</td></tr>
+        <tr><td>1.1.2</td><td>NDA mechanisms strengthened</td><td>Number of coordination mechanisms</td></tr>
+        <tr><td>2.1.1</td><td>MRV system operational</td><td>Data completeness rate</td></tr>
+      </table>
+      <h2>5. Requested Support</h2>
+      <table><tr><th>Instrument</th><th>Amount</th><th>Use</th></tr>
+        <tr><td>Readiness Grant</td><td>$300K–500K</td><td>Platform scaling, PDD completion, baseline study</td></tr>
+        <tr><td>Investment (via AE)</td><td>$3M–8M</td><td>Deployment to 200 units</td></tr>
+      </table>
+      <h2>6. dMRV Platform Readiness</h2>
+      <table><tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Sensors deployed</td><td>${SENSORS.length}</td></tr>
+        <tr><td>Departments covered</td><td>${deptSummary.length}</td></tr>
+        <tr><td>Data completeness</td><td>98.7%</td></tr>
+        <tr><td>Uncertainty</td><td>±${(r.uncertainty*100).toFixed(2)}%</td></tr>
+        <tr><td>Current verified reductions</td><td>${r.total.toFixed(3)} tCO₂e</td></tr>
+      </table>
+      <div class="signature">Report generated by GCFTportal dMRV Platform · ${now} · Draft — edit before submission</div>`,
+
+    cdb: `<h1>CDB Regional Climate Finance MRV Report</h1>
+      <div style="color:var(--text-mute);font-size:10.5px;">COSMOS Solution · CDB Borrowing Member Country Submission</div>
+      <div class="meta">
+        <div><span>Prepared for:</span> Caribbean Development Bank</div>
+        <div><span>Pilot countries:</span> Haiti, Belize, Jamaica, SKN</div>
+        <div><span>MRV System:</span> Regional online MRV for climate finance</div>
+        <div><span>Generated:</span> ${now}</div>
+      </div>
+      <h2>1. Climate Finance Tracking</h2>
+      <p>COSMOS dMRV platform aligns with the CDB Regional MRV System launched in 2023 through a GCF Readiness grant. The system standardises tracking of climate finance flows and impact metrics across CDB Borrowing Member Countries.</p>
+      <h2>2. Coverage by Department</h2>
+      <table><tr><th>Department</th><th>Sensors</th><th>Est. tCO₂e</th><th>Investment Need</th></tr>
+        ${deptSummary.map(d => `<tr><td>${d.dept}</td><td>${d.count}</td><td>${d.credits.toFixed(3)}</td><td>$${(d.count * 15000).toLocaleString()}</td></tr>`).join('')}
+        <tr style="font-weight:700;"><td>Total</td><td>${SENSORS.length}</td><td>${deptSummary.reduce((a,d) => a+d.credits, 0).toFixed(3)}</td><td>$${(SENSORS.length * 15000).toLocaleString()}</td></tr>
+      </table>
+      <h2>3. Classification of Climate Finance</h2>
+      <table><tr><th>Category</th><th>Amount</th><th>Source</th></tr>
+        <tr><td>Mitigation — Renewable Energy</td><td>$3M–8M</td><td>GCF, IDB Invest</td></tr>
+        <tr><td>Mitigation — Clean Cooking</td><td>$500K–1.5M</td><td>Carbon pre-financing</td></tr>
+        <tr><td>MRV System Strengthening</td><td>$200K–500K</td><td>CDB Regional MRV Grant</td></tr>
+      </table>
+      <h2>4. Regional Integration</h2>
+      <p>The dMRV platform exposes sensor data via API for CDB portfolio-level aggregation. This enables Haiti to contribute to the regional MRV system alongside Belize, Jamaica, and St. Kitts-Nevis.</p>
+      <div class="signature">Report generated by GCFTportal dMRV Platform · ${now} · Draft — edit before submission</div>`,
+
+    nda: `<h1>Haiti NDA Climate Finance MRV Report</h1>
+      <div style="color:var(--text-mute);font-size:10.5px;">COSMOS Solution · Ministry of Environment Submission</div>
+      <div class="meta">
+        <div><span>Prepared for:</span> Ministère de l'Environnement (MDE)</div>
+        <div><span>MRV Framework:</span> Feasibility study under GCF Readiness</div>
+        <div><span>NDC Target:</span> 61% reduction by 2030</div>
+        <div><span>Generated:</span> ${now}</div>
+      </div>
+      <h2>1. Context</h2>
+      <p>Haiti's NDA lacks the necessary tools and permanent frameworks for project management that allow the institution to monitor, report, and review its pipeline progress. The COSMOS dMRV platform addresses this gap by providing real-time data for the energy and clean cooking sectors.</p>
+      <h2>2. NDC Alignment</h2>
+      <table><tr><th>NDC Priority</th><th>COSMOS Contribution</th></tr>
+        <tr><td>Renewable energy (biogas)</td><td>${BIODIGESTERS.length} biodigesters producing clean thermal energy</td></tr>
+        <tr><td>Clean cooking</td><td>${BIODIGESTERS.length * 6} households using biogas instead of charcoal</td></tr>
+        <tr><td>Reduced deforestation</td><td>Charcoal demand reduced by ~${(BIODIGESTERS.length * 6 * 1.0).toFixed(0)} t/year</td></tr>
+        <tr><td>MRV system strengthening</td><td>dMRV platform providing verifiable data</td></tr>
+      </table>
+      <h2>3. Data Quality Indicators</h2>
+      <table><tr><th>Indicator</th><th>Value</th><th>Target</th></tr>
+        <tr><td>Sensor uptime</td><td>99.2%</td><td>≥95%</td></tr>
+        <tr><td>Data completeness</td><td>98.7%</td><td>≥95%</td></tr>
+        <tr><td>Uncertainty</td><td>±${(r.uncertainty*100).toFixed(2)}%</td><td>≤10%</td></tr>
+        <tr><td>Verification readiness</td><td>Q1 2027</td><td>2027</td></tr>
+      </table>
+      <h2>4. Sustainable Development Co-Benefits</h2>
+      <table><tr><th>SDG</th><th>Indicator</th><th>Contribution</th></tr>
+        <tr><td>SDG 3</td><td>Clean household air</td><td>Reduced smoke exposure for ${BIODIGESTERS.length * 6} households</td></tr>
+        <tr><td>SDG 7</td><td>Clean cooking fuel</td><td>Biogas replaces charcoal</td></tr>
+        <tr><td>SDG 8</td><td>Decent work</td><td>45 FTE jobs created</td></tr>
+        <tr><td>SDG 13</td><td>Climate mitigation</td><td>${r.total.toFixed(3)} tCO₂e verified</td></tr>
+        <tr><td>SDG 15</td><td>Life on land</td><td>Reduced deforestation pressure</td></tr>
+      </table>
+      <div class="signature">Report generated by GCFTportal dMRV Platform · ${now} · Draft — edit before submission</div>`,
+
+    dfi: `<h1>DFI Investment Brief</h1>
+      <div style="color:var(--text-mute);font-size:10.5px;">COSMOS Solution · dMRV-Enabled Biogas Program</div>
+      <div class="meta">
+        <div><span>Instrument:</span> Blended finance + carbon pre-financing</div>
+        <div><span>Ticket:</span> $1M–3M</div>
+        <div><span>Tenor:</span> 5–7 years</div>
+        <div><span>Generated:</span> ${now}</div>
+      </div>
+      <h2>Investment Thesis</h2>
+      <p>COSMOS operates ${BIODIGESTERS.length} biodigesters across Southern Haiti, delivering clean cooking fuel while generating dMRV-verified carbon credits under Gold Standard AMM v1.1. The platform is DFI-ready: auditable, scalable, and aligned with GCF, IDB Invest, CDB, and World Bank climate mandates.</p>
+      <h2>Financial Highlights</h2>
+      <table><tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Annual credit generation (50 units)</td><td>868 tCO₂e</td></tr>
+        <tr><td>Forward credit price</td><td>$12/tCO₂e</td></tr>
+        <tr><td>5-year cumulative revenue</td><td>$51,212</td></tr>
+        <tr><td>Scale to 500 units (Year 3)</td><td>$450K+ annual</td></tr>
+        <tr><td>Platform cost per unit (500)</td><td>$231</td></tr>
+        <tr><td>Revenue per unit</td><td>$1,024</td></tr>
+        <tr><td>Margin per unit</td><td>344%</td></tr>
+      </table>
+      <h2>Risk Mitigation</h2>
+      <ul style="padding-left:18px;line-height:1.9;">
+        <li>Sensor redundancy with 30-day local storage</li>
+        <li>Conservative fNRB (0.85) and GWP (28) parameters</li>
+        <li>Buffer pool for permanence (Gold Standard requirement)</li>
+        <li>Decentralized operations for political continuity</li>
+        <li>Community benefit-sharing fund for sustained adoption</li>
+      </ul>
+      <div class="signature">Report generated by GCFTportal dMRV Platform · ${now} · Confidential — for DFI review only</div>`
+  };
+
+  preview.innerHTML = templates[type] || templates.gs;
+  preview.contentEditable = STATE.reportEditMode ? 'true' : 'false';
+  showToast('Draft report generated — edit before submitting', 'ok');
+  logAudit('info', 'Report draft generated · ' + type);
+}
+
+/* ============================================================
+   EXPORT CSV
+   ============================================================ */
+function downloadCSV(csv, filename){
+  const blob = new Blob([csv], { type:'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+function exportCSV(){
+  const r = computeCredits();
+  let csv = 'Sensor ID,Biodigester,Commune,Department,Model,Flow,Temp,Pressure,CH4,Uptime,Status\n';
+  SENSORS.forEach(s => {
+    csv += `${s.id},${s.bioId},${s.commune},${s.department},${s.model},${s.flow.toFixed(2)},${s.temp.toFixed(1)},${s.pressure.toFixed(2)},${s.ch4.toFixed(1)},${s.uptime.toFixed(1)},${s.status}\n`;
+  });
+  csv += `\nSummary\n`;
+  csv += `Total flow (m³),${r.flow.toFixed(3)}\n`;
+  csv += `Avg CH4 (%),${(r.ch4Fraction*100).toFixed(2)}\n`;
+  csv += `Methane captured (kg),${r.ch4Mass.toFixed(3)}\n`;
+  csv += `ER methane (tCO2e),${r.ER1.toFixed(4)}\n`;
+  csv += `ER charcoal (tCO2e),${r.ER2.toFixed(4)}\n`;
+  csv += `Leakage (tCO2e),${r.leakage.toFixed(4)}\n`;
+  csv += `Total (tCO2e),${r.total.toFixed(4)}\n`;
+  csv += `Value (USD),${r.value.toFixed(2)}\n`;
+  downloadCSV(csv, 'cosmos-dmrv-export-' + Date.now() + '.csv');
+  showToast('CSV exported', 'ok');
+  logAudit('info', 'Sensor data exported to CSV');
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function switchView(name){
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === name));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+  const titles = {
+    overview:'Program Overview', live:'Live Sensor Telemetry', fleet:'Biodigester Fleet',
+    sensors:'Sensor Registry', map:'Haiti Geo Intelligence', calc:'Carbon Calculations',
+    verify:'Verification & Data Quality', analytics:'Grouped Analytics',
+    reports:'Reports & Exports', finance:'DFI Readiness', compliance:'Standards Alignment',
+    maintenance:'Maintenance Schedule'
+  };
+  const el = $('viewTitle'); if (el) el.textContent = titles[name] || 'Dashboard';
+
+  if (name === 'map') setTimeout(initMap, 100);
+  if (name === 'analytics') renderGrouped();
+  if (name === 'sensors'){ renderRegistry(); populateFilters(); }
+  if (name === 'maintenance') renderMaintenance();
+  if (name === 'fleet') renderFleet();
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', function(){
+  // Nav
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.addEventListener('click', () => switchView(n.dataset.view));
+  });
+
+  // Initial render
+  renderSensorTable();
+  renderLiveBar();
+  renderFleet();
+  renderAudits();
+  recalcAll();
+  initCharts();
+  renderHotspots();
+  populateFilters();
+  renderRegistry();
+  renderMaintenance();
+
+  logAudit('info', 'COSMOS dMRV Platform v3.0 initialized');
+  logAudit('ok', `${SENSORS.length} sensors connected · GS AMM v1.1 loaded`);
+  logAudit('info', 'AI Report Generator ready');
+
+  // Simulation
+  setInterval(tickSensors, 2000);
+  setInterval(renderLiveBar, 1000);
+
+  // Resize
+  window.addEventListener('resize', () => {
+    if (chartAcc) chartAcc.resize();
+    if (chartPath) chartPath.resize();
+    if (chartRev) chartRev.resize();
+    if (chartCov) chartCov.resize();
+    if (chartGrouped) chartGrouped.resize();
+    if (chartDistribution) chartDistribution.resize();
+    if (STATE.guideActive) showGuideStep();
+  });
+
+  // Start tour on first visit (auto-suggest)
+  setTimeout(() => {
+    if (!localStorage.getItem('cosmos_tour_done')){
+      showToast('New here? Click "Tour" for a guided walkthrough', 'ok');
+    }
+  }, 2000);
+
+  console.log('%cCOSMOS dMRV Platform v3.0 ready', 'color:#10b981;font-weight:bold;font-size:14px');
+});
+</script>
+</body>
+</html>
